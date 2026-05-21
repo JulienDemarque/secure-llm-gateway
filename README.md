@@ -26,6 +26,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Per-API-key Redis sliding-window rate limiting (default 30 req/min, configurable per key).
 - Live `/v1/chat` call path via LiteLLM SDK with provider API keys from env.
 - Model-assisted prompt-injection guard on `/v1/chat` using structured JSON detector output.
+- Mongo audit logging for every `/v1/chat` request (`allowed` / `blocked` / `error`) with request/response hashes.
 
 ## Provider configuration (LiteLLM SDK path)
 
@@ -133,6 +134,12 @@ curl http://localhost:3000/healthz
 ```
 
 `/healthz` now reports `mongo`, `redis`, `ollama`, and provider readiness.
+
+Query audit logs as admin:
+
+```bash
+curl -H "x-api-key: $ADMIN_API_KEY" "http://localhost:3000/v1/audit?limit=100"
+```
 
 Swagger UI for manual testing:
 

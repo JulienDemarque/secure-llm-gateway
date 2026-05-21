@@ -644,3 +644,30 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - explicitly instructs classifier to prefer the most specific matching rule and use `INJ-UNKNOWN` only when no confident mapping exists.
 - Updated `docs/implementation-plan.md`:
   - marked detector disambiguation prompt refinement complete.
+
+## 2026-05-22 - Iteration 44 (per-request audit logging + /v1/audit retrieval)
+
+- Implemented audit domain/model/repository foundations:
+  - added `src/domain/audit.ts` (record shape, status, repository interface).
+  - added `src/models/audit-log.ts` (`audit_logs` Mongo schema/model).
+  - added `src/repositories/mongo-audit-log-repository.ts`.
+  - added `src/repositories/noop-audit-log-repository.ts` for isolated test contexts.
+- Wired per-request audit capture for `/v1/chat` in `src/app.ts`:
+  - added request/response hashing (`sha256` base64).
+  - logs one record per request with status mapping (`allowed`/`blocked`/`error`), latency, API key id, model, and detector threat metadata.
+  - write path is non-blocking and failure-tolerant (logs write failures without breaking API responses).
+- Implemented admin retrieval endpoint:
+  - `/v1/audit` now returns persisted entries (replacing previous `501` placeholder).
+  - supports `since` (ISO timestamp) and `limit` (1..500, default 100) validation.
+- Propagated detector result to request context:
+  - extended Express request typing with `promptDetectionResult`.
+  - detector middleware now stores the latest detection result on request for audit use.
+- Updated tests and scripts:
+  - added `src/app.audit.test.ts` covering allowed/blocked/error logging and admin retrieval.
+  - updated existing auth/rate-limit/prompt tests to inject `NoopAuditLogRepository`.
+  - updated `package.json` test scripts to include audit test suite.
+- Updated API/docs:
+  - `src/docs/openapi.ts` now documents `/v1/audit` `200` path + query params and `400` validation response.
+  - `README.md` now includes audit logging behavior and example admin audit query command.
+- Updated `docs/implementation-plan.md`:
+  - marked audit logging and retrieval path as completed.

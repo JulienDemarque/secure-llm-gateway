@@ -78,7 +78,7 @@
 - [ ] Implement prompt-injection detection module and tests.
 - [ ] Implement PII redaction module and tests.
 - [ ] Implement output validation module and tests.
-- [ ] Implement audit logging and retrieval path.
+- [x] Implement audit logging and retrieval path.
 
 ### Phase 6: hardening and release readiness
 

@@ -9,6 +9,7 @@ import type {
   PromptInjectionDetector,
   PromptMessage
 } from "./domain/prompt-injection.js";
+import { NoopAuditLogRepository } from "./repositories/noop-audit-log-repository.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 import { hashApiKey } from "./security/hash.js";
 
@@ -86,7 +87,8 @@ describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis i
         apiKeyRepository: repository,
         rateLimitStore: new RedisRateLimitStore(redisClient),
         llmClient: new FakeLlmClient(),
-        promptInjectionDetector: new AllowPromptInjectionDetector()
+        promptInjectionDetector: new AllowPromptInjectionDetector(),
+        auditLogRepository: new NoopAuditLogRepository()
       }),
       keys: { keyA, keyB }
     };

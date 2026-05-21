@@ -1,5 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
+import { createHash } from "node:crypto";
 import swaggerUi from "swagger-ui-express";
+import type { AuditLogRepository, AuditStatus } from "./domain/audit.js";
 import type { ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatMessage, LlmClient } from "./domain/llm.js";
 import type { PromptInjectionDetector } from "./domain/prompt-injection.js";
@@ -15,6 +17,7 @@ import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
 import { LiteLlmClient } from "./providers/litellm-client.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
+import { MongoAuditLogRepository } from "./repositories/mongo-audit-log-repository.js";
 import { NoopRateLimitStore } from "./repositories/noop-rate-limit-store.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 
@@ -37,10 +40,27 @@ function hasProviderKey(): boolean {
 /** Optional wiring hooks used by tests to inject fake repositories. */
 type CreateAppOptions = {
   apiKeyRepository?: ApiKeyRepository;
+  auditLogRepository?: AuditLogRepository;
   rateLimitStore?: RateLimitStore;
   llmClient?: LlmClient;
   promptInjectionDetector?: PromptInjectionDetector;
 };
+
+/** Stable content hash for request/response audit traceability. */
+function hashForAudit(value: unknown): string {
+  return createHash("sha256").update(JSON.stringify(value ?? null), "utf8").digest("base64");
+}
+
+/** Maps final HTTP status to assignment-required audit status values. */
+function toAuditStatus(statusCode: number): AuditStatus {
+  if (statusCode >= 500) {
+    return "error";
+  }
+  if (statusCode >= 400) {
+    return "blocked";
+  }
+  return "allowed";
+}
 
 /** Validates chat payload structure before security pipeline execution. */
 function validateChatRequest(req: Request<unknown, unknown, ChatRequestBody>, res: Response): boolean {
@@ -76,6 +96,7 @@ function validateChatRequest(req: Request<unknown, unknown, ChatRequestBody>, re
 export function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const apiKeyRepository = options.apiKeyRepository ?? new MongoApiKeyRepository();
+  const auditLogRepository = options.auditLogRepository ?? new MongoAuditLogRepository();
   const redisClient = getRedisClient();
   const rateLimitStore =
     options.rateLimitStore ?? (redisClient ? new RedisRateLimitStore(redisClient) : new NoopRateLimitStore());
@@ -89,6 +110,62 @@ export function createApp(options: CreateAppOptions = {}) {
     res.status(200).json(openApiDocument);
   });
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
+
+  app.use("/v1/chat", (req: Request, res: Response, next: NextFunction) => {
+    const startedAt = Date.now();
+    const requestHash = hashForAudit(req.body ?? null);
+    let responseBody: unknown = null;
+
+    const originalJson = res.json.bind(res);
+    res.json = ((body: unknown) => {
+      responseBody = body;
+      return originalJson(body);
+    }) as Response["json"];
+
+    const originalSend = res.send.bind(res);
+    res.send = ((body: unknown) => {
+      if (responseBody === null) {
+        responseBody = body;
+      }
+      return originalSend(body);
+    }) as Response["send"];
+
+    res.on("finish", () => {
+      const detectedThreats =
+        req.promptDetectionResult && req.promptDetectionResult.blocked
+          ? [
+              {
+                type: "prompt_injection" as const,
+                ruleId: req.promptDetectionResult.ruleId,
+                owaspCategory: req.promptDetectionResult.owaspCategory,
+                confidence: req.promptDetectionResult.confidence
+              }
+            ]
+          : [];
+
+      const model =
+        req.body && typeof req.body === "object" && "model" in req.body && typeof req.body.model === "string"
+          ? req.body.model
+          : null;
+
+      void auditLogRepository
+        .create({
+          timestamp: new Date(startedAt),
+          apiKeyId: req.authContext?.apiKeyId ?? null,
+          model,
+          requestHash,
+          responseHash: hashForAudit(responseBody),
+          status: toAuditStatus(res.statusCode),
+          latencyMs: Date.now() - startedAt,
+          detectedThreats
+        })
+        .catch((error: unknown) => {
+          console.error("audit-log-write-failed", error);
+        });
+    });
+
+    return next();
+  });
 
   app.get("/healthz", async (_req: Request, res: Response) => {
     const ollamaStatus = await getOllamaHealthStatus();
@@ -136,12 +213,30 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   );
 
-  // Admin-only endpoint; audit implementation is intentionally deferred.
-  app.get("/v1/audit", requireApiKey, enforceRateLimit, requireAdmin, (_req: Request, res: Response) => {
-    res.status(501).json({
-      error: "not-implemented",
-      message: "Audit retrieval pipeline not implemented yet"
-    });
+  app.get("/v1/audit", requireApiKey, enforceRateLimit, requireAdmin, async (req: Request, res: Response) => {
+    const sinceRaw = typeof req.query.since === "string" ? req.query.since : undefined;
+    const limitRaw = typeof req.query.limit === "string" ? req.query.limit : undefined;
+
+    let since: Date | undefined;
+    if (sinceRaw) {
+      const parsedSince = new Date(sinceRaw);
+      if (Number.isNaN(parsedSince.getTime())) {
+        return res.status(400).json({ error: "since must be a valid ISO-8601 timestamp" });
+      }
+      since = parsedSince;
+    }
+
+    let limit = 100;
+    if (limitRaw) {
+      const parsedLimit = Number.parseInt(limitRaw, 10);
+      if (!Number.isInteger(parsedLimit) || parsedLimit <= 0 || parsedLimit > 500) {
+        return res.status(400).json({ error: "limit must be an integer between 1 and 500" });
+      }
+      limit = parsedLimit;
+    }
+
+    const entries = await auditLogRepository.list({ since, limit });
+    return res.status(200).json({ entries });
   });
 
   // Converts malformed JSON parser errors into stable API error payloads.

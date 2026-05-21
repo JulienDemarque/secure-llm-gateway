@@ -8,6 +8,7 @@ import type {
   PromptInjectionDetector,
   PromptMessage
 } from "./domain/prompt-injection.js";
+import { NoopAuditLogRepository } from "./repositories/noop-audit-log-repository.js";
 import { hashApiKey } from "./security/hash.js";
 
 /** Lightweight repository stub used to isolate middleware behavior in tests. */
@@ -93,7 +94,8 @@ function makeApp() {
     app: createApp({
       apiKeyRepository: repository,
       llmClient: new FakeLlmClient(),
-      promptInjectionDetector: new AllowPromptInjectionDetector()
+      promptInjectionDetector: new AllowPromptInjectionDetector(),
+      auditLogRepository: new NoopAuditLogRepository()
     }),
     keys: { clientRaw, adminRaw, revokedRaw }
   };
@@ -155,6 +157,6 @@ describe("auth middleware", () => {
   it("allows admin role on /v1/audit", async () => {
     const { app, keys } = makeApp();
     const response = await request(app).get("/v1/audit").set("x-api-key", keys.adminRaw);
-    expect(response.status).toBe(501);
+    expect(response.status).toBe(200);
   });
 });

@@ -9,6 +9,7 @@ import type {
   PromptMessage
 } from "./domain/prompt-injection.js";
 import type { RateLimitResult, RateLimitStore } from "./domain/rate-limit.js";
+import { NoopAuditLogRepository } from "./repositories/noop-audit-log-repository.js";
 import { hashApiKey } from "./security/hash.js";
 
 /** In-memory API key repo for rate-limit integration tests. */
@@ -95,7 +96,8 @@ function makeApp() {
       apiKeyRepository: repository,
       rateLimitStore: new InMemoryRateLimitStore(),
       llmClient: new FakeLlmClient(),
-      promptInjectionDetector: new AllowPromptInjectionDetector()
+      promptInjectionDetector: new AllowPromptInjectionDetector(),
+      auditLogRepository: new NoopAuditLogRepository()
     }),
     keys: { keyA, keyB }
   };

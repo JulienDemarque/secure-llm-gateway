@@ -8,6 +8,7 @@ import type {
   PromptInjectionDetector,
   PromptMessage
 } from "./domain/prompt-injection.js";
+import { NoopAuditLogRepository } from "./repositories/noop-audit-log-repository.js";
 import { hashApiKey } from "./security/hash.js";
 
 /** In-memory API key repository for prompt guard tests. */
@@ -89,7 +90,8 @@ function makeApp(detector: PromptInjectionDetector) {
     app: createApp({
       apiKeyRepository: repository,
       llmClient,
-      promptInjectionDetector: detector
+      promptInjectionDetector: detector,
+      auditLogRepository: new NoopAuditLogRepository()
     }),
     llmClient,
     clientRaw

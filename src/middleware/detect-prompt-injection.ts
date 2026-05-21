@@ -26,6 +26,7 @@ export function detectPromptInjection(detector: PromptInjectionDetector) {
         }) ?? [];
 
       const result = await detector.detect(inputMessages);
+      req.promptDetectionResult = result;
       if (isPromptGuardDebugEnabled()) {
         console.log(
           JSON.stringify({

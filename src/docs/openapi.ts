@@ -101,8 +101,25 @@ export const openApiDocument = {
       get: {
         summary: "Retrieve audit entries (admin only)",
         security: [{ ApiKeyAuth: [] }],
+        parameters: [
+          {
+            name: "since",
+            in: "query",
+            required: false,
+            schema: { type: "string", format: "date-time" },
+            description: "Optional lower-bound timestamp (ISO-8601)."
+          },
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, maximum: 500, default: 100 },
+            description: "Maximum number of entries to return."
+          }
+        ],
         responses: {
-          "501": { description: "Not implemented yet" },
+          "200": { description: "Audit entries" },
+          "400": { description: "Invalid query parameters" },
           "401": { description: "Missing or invalid API key" },
           "403": { description: "Admin role required" },
           "429": { description: "Rate limit exceeded" }
