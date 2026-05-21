@@ -30,6 +30,7 @@
 
 - [x] Create research matrix document.
 - [x] Record initial shortlist of prompt-injection and PII/security model options for later deep comparison.
+- [x] Complete first-pass deep comparison criteria and pros/cons across shortlisted prompt-injection and PII options.
 - [ ] Research tools and best practices (official docs, alternatives, recommendation).
 - [ ] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
 - [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.

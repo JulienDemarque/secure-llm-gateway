@@ -379,3 +379,23 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - documented that detailed pros/cons benchmarking remains a separate follow-up pass.
 - Updated `docs/implementation-plan.md`:
   - marked the "initial model shortlist recorded" research task complete.
+
+## 2026-05-21 - Iteration 27 (deep model comparison pass)
+
+- Re-checked assignment control requirements before expanding research (`prompt-injection detection`, `PII redaction`).
+- Expanded `docs/research-matrix.md` with first-pass deep comparisons:
+  - added explicit evaluation criteria for prompt-injection options (quality, FP risk, latency, integration complexity, ops burden).
+  - added option-by-option pros/cons and fit notes for:
+    - `llama-guard3`
+    - `Prompt-Guard 2`
+    - `deberta-v3-base-prompt-injection-v2`
+    - `prompt-injection-sentinel`
+  - added explicit evaluation criteria for PII/security options.
+  - added option-by-option pros/cons and fit notes for:
+    - deterministic rules
+    - Microsoft Presidio
+    - GLiNER
+    - hybrid strategy
+  - refined recommendation: deterministic baseline for required categories first, then hybrid extension.
+- Updated `docs/implementation-plan.md`:
+  - marked the deep comparison pass task complete under Phase 2.
