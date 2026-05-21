@@ -6,7 +6,8 @@ alwaysApply: true
 # Small-step workflow
 
 - Ship work in small, cohesive steps.
-- Keep `docs/original-assignment.md` in active context during planning and implementation to avoid requirement drift.
+- Start every iteration by checking `docs/original-assignment.md` to avoid requirement drift.
+- Update `docs/implementation-plan.md` at the end of every iteration to reflect completed and pending work.
 - Keep docs concise and load only the minimum active set needed for the current iteration.
 - Before implementing, check official documentation and best-practice guidance relevant to the change (for example Node.js/Express docs for API work).
 - End each step with:

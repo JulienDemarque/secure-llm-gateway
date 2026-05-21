@@ -14,3 +14,18 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - `GET /healthz`
 - `POST /v1/chat`
 - `GET /v1/audit`
+
+## Enable pre-commit hook
+
+```bash
+chmod +x .githooks/pre-commit
+git config core.hooksPath .githooks
+```
+
+Verify:
+
+```bash
+git config --get core.hooksPath
+```
+
+Expected output: `.githooks`

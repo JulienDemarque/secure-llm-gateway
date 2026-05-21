@@ -143,3 +143,30 @@ Tracks repository changes made during this project. Each entry summarizes what c
 
 - Added `dotenv` dependency and loaded it in `src/server.ts` with `import "dotenv/config";`.
 - Result: environment variables from root `.env` are now available to `hasProviderKey()` at runtime.
+
+## 2026-05-21 - Iteration 12 (README pre-commit activation steps)
+
+- Updated `README.md`:
+  - added concise commands to enable `.githooks/pre-commit`.
+  - added verification command for `core.hooksPath`.
+
+## 2026-05-21 - Iteration 13 (iteration-discipline rule hardening)
+
+- Updated `.cursor/rules/safe-iteration-loop.mdc`:
+  - made per-iteration check of `docs/original-assignment.md` explicit.
+  - required updating `docs/implementation-plan.md` at the end of each iteration.
+- Updated `docs/implementation-plan.md` scope checklist:
+  - added explicit reminder to re-check assignment requirements and update checklist every iteration.
+
+## 2026-05-21 - Iteration 14 (auth architecture design review pass)
+
+- Re-checked assignment requirements before auth planning (hashed API keys in Mongo, `client/admin` roles, admin-only `/v1/audit`).
+- Updated `docs/technical-architecture-outline.md` with a dedicated auth design section:
+  - middleware contract (`authenticateApiKey`, `requireAdmin`)
+  - verification flow and request auth-context shape
+  - Mongo API key schema fields and status model
+  - response behavior (`401`/`403`) and auth test cases
+  - security notes on header-only key handling, no raw-key logging, and constant-time compare guidance
+  - added official references (OWASP + Node crypto docs).
+- Updated `docs/implementation-plan.md`:
+  - marked auth architecture documentation task complete for review.

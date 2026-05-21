@@ -3,6 +3,7 @@
 ## Scope
 
 - [ ] Build a secure gateway with layered controls while treating prompt corpora as untrusted test assets.
+- [ ] For every iteration, re-check `docs/original-assignment.md` and update this implementation checklist.
 
 ## Phased checklist
 
@@ -37,6 +38,7 @@
 
 - [x] Create technical architecture outline document.
 - [x] Bootstrap minimal Node.js API placeholder with required routes.
+- [x] Document auth architecture details (flow, data model, roles, responses, tests) for review.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.
