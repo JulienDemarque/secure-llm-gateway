@@ -1,0 +1,10 @@
+# Untrusted prompt-injection corpora and generated variants.
+test-prompts/
+
+# Common local artifacts.
+.DS_Store
+node_modules/
+dist/
+coverage/
+.env
+.env.*

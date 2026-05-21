@@ -1,0 +1,15 @@
+---
+description: Enforce small, reviewable implementation iterations
+alwaysApply: true
+---
+
+# Small-step workflow
+
+- Ship work in small, cohesive steps.
+- Keep `docs/original-assignment.md` in active context during planning and implementation to avoid requirement drift.
+- End each step with:
+  - change summary
+  - rationale
+  - suggested next step
+- Avoid batching unrelated concerns in one pass.
+- Prefer safe defaults and explicit assumptions.
