@@ -1,6 +1,8 @@
 import express, { type NextFunction, type Request, type Response } from "express";
+import swaggerUi from "swagger-ui-express";
 import type { ApiKeyRepository } from "./domain/auth.js";
 import { getMongoHealthStatus } from "./db/mongoose.js";
+import { openApiDocument } from "./docs/openapi.js";
 import { authenticateApiKey } from "./middleware/authenticate-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
@@ -60,6 +62,10 @@ export function createApp(options: CreateAppOptions = {}) {
   const apiKeyRepository = options.apiKeyRepository ?? new MongoApiKeyRepository();
   const requireApiKey = authenticateApiKey(apiKeyRepository);
   app.use(express.json({ limit: "100kb" }));
+  app.get("/openapi.json", (_req: Request, res: Response) => {
+    res.status(200).json(openApiDocument);
+  });
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
   app.get("/healthz", (_req: Request, res: Response) => {
     res.status(200).json({

@@ -292,3 +292,22 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - added explicit Mongo authentication hardening guidance for production (DB users/roles, least privilege, secret hygiene, network isolation).
 - Updated `docs/implementation-plan.md`:
   - marked production Mongo authentication hardening documentation task complete.
+
+## 2026-05-21 - Iteration 22 (Swagger/OpenAPI manual test surface)
+
+- Re-checked assignment endpoint contract before adding API docs (`/healthz`, `/v1/chat`, `/v1/audit`).
+- Added Swagger/OpenAPI support:
+  - installed `swagger-ui-express` and `@types/swagger-ui-express`
+  - added `src/docs/openapi.ts` with minimal OpenAPI 3.0 spec
+  - wired endpoints in `src/app.ts`:
+    - `GET /openapi.json`
+    - `GET /docs` (Swagger UI; redirects to `/docs/`)
+- Updated `README.md`:
+  - documented manual API testing endpoints (`/openapi.json`, `/docs`)
+  - added quick open command for Swagger UI.
+- Validation:
+  - local checks passed (`npm run typecheck`, `npm test`, `npm run build`)
+  - Docker API rebuilt successfully
+  - docs endpoints reachable (`/docs/` -> 200, `/openapi.json` -> 200)
+- Updated `docs/implementation-plan.md`:
+  - marked minimal OpenAPI/Swagger documentation task complete.

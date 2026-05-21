@@ -43,6 +43,7 @@
 - [x] Decide persistence library (`mongoose`) and document Mongo/Redis schema outline.
 - [x] Document PII redaction encryption/decryption design and required env secrets.
 - [x] Add function-level code comments across current implementation modules.
+- [x] Add minimal OpenAPI/Swagger docs for manual endpoint validation.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.

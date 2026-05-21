@@ -15,6 +15,8 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - `GET /healthz`
 - `POST /v1/chat`
 - `GET /v1/audit`
+- `GET /openapi.json`
+- `GET /docs` (Swagger UI)
 
 ## Run with Docker
 
@@ -66,4 +68,10 @@ Quick health check:
 
 ```bash
 curl http://localhost:3000/healthz
+```
+
+Swagger UI for manual testing:
+
+```bash
+open http://localhost:3000/docs
 ```
