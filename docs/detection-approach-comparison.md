@@ -37,8 +37,23 @@
   - explicit audit reasons
 - Keep sidecar path as fallback if scaling/isolation needs dominate later.
 
+## Implementation guardrails (required either way)
+
+- Time budget
+  - enforce per-request detector timeout (target configurable; initial planning target 200-600ms p95).
+- Fallback policy
+  - on timeout/error, apply deterministic backup checks and emit explicit audit reason.
+- Isolation of detector contract
+  - expose a single internal detector interface so switching from in-process to sidecar does not affect route/middleware signatures.
+- Observability
+  - track latency, timeout/error rate, fallback rate, and classification distribution.
+- Safety posture
+  - never trust detector output without schema validation and normalization.
+
 ## Missing data before final lock
 
 - p95 latency impact under expected request volume
 - false-positive and false-negative rates on corpus + variations
 - memory and CPU profile for target deployment shape
+- model load/warmup behavior and effect of `keep_alive`
+- acceptable fallback behavior per risk tier (default tenant vs high-risk tenant)

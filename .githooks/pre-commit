@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -eu
+
+echo "Running pre-commit secret scan (gitleaks)..."
+gitleaks detect --config .gitleaks.toml --source . --no-git
+
+echo "Pre-commit checks passed."

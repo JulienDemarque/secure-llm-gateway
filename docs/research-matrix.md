@@ -15,6 +15,19 @@ Research is the top implementation priority. For each topic, this document track
 - Best-fit recommendation
   - Hybrid: Ollama-based semantic detection with deterministic blocking for critical signatures.
 
+## Topic: prompt-injection detection with Ollama JS SDK
+
+- Official sources
+  - Ollama JS SDK: <https://github.com/ollama/ollama-js>
+  - Ollama API/docs: <https://ollama.com>
+- Alternatives
+  - In-process SDK client (`ollama` package) in gateway process
+  - Sidecar detector service calling Ollama server
+  - Cloud-hosted Ollama endpoint with SDK client and auth headers
+- Best-fit recommendation
+  - Start with in-process Ollama JS SDK behind a detector interface, with strict timeout, fallback policy, and audit tagging.
+  - Keep sidecar-compatible interface boundaries so deployment can switch without endpoint contract changes.
+
 ## Topic: repo architecture
 
 - Official sources

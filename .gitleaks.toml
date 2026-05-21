@@ -1,0 +1,4 @@
+title = "SecureLLM Gateway gitleaks config"
+
+[extend]
+useDefault = true

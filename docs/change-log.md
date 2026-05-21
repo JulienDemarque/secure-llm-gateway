@@ -28,3 +28,80 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Added this `docs/change-log.md` file:
   - established logging requirement so each future change is summarized in this file.
 - Note: `.cursorignore` creation still blocked by workspace permissions.
+
+## 2026-05-21 - Iteration 3 (cursorignore validation and corpus guidance)
+
+- Validated `.cursorignore` content:
+  - confirmed `test-prompts/` entry exists and is syntactically correct.
+- Added `docs/test-prompts-guidelines.md`:
+  - documented local `test-prompts/` folder layout and safety handling rules.
+- Updated documentation trackers:
+  - added guidelines doc to `docs/README.md`
+  - marked `.cursorignore` and contributor guidance checklist items complete in `docs/implementation-plan.md`
+- Note: creating files directly under `test-prompts/` was blocked by local filesystem permissions in this environment.
+
+## 2026-05-21 - Iteration 4 (preflight and requirement alignment)
+
+- Re-validated assignment expectations from `docs/original-assignment.md`, including:
+  - mandatory secret scanning config (`.gitleaks.toml` or equivalent)
+  - pre-release readiness around Docker, tests, and process evidence.
+- Ran local environment checks and confirmed availability:
+  - Node.js, npm, Docker, Docker Compose, and gitleaks are installed.
+- Added `docs/dev-environment-preflight.md`:
+  - captured tool status and pre-coding readiness checklist.
+- Added `docs/requirements-traceability.md`:
+  - mapped mandatory requirements to planned docs/checkpoints and marked implementation status.
+- Updated `docs/implementation-plan.md`:
+  - introduced new Phase 0 for environment and requirement preflight tasks.
+- Updated `docs/README.md`:
+  - added preflight and traceability docs to the docs index.
+
+## 2026-05-21 - Iteration 5 (gitleaks baseline setup)
+
+- Added `.gitleaks.toml` at repo root:
+  - enabled default gitleaks detection rules for secret scanning.
+- Added `docs/security-ci-baseline.md`:
+  - defined minimum CI checks (secret scan + tests on push/PR).
+  - documented local scan command using the new gitleaks config.
+- Updated `docs/dev-environment-preflight.md`:
+  - added the concrete gitleaks detect command to preflight checks.
+- Updated `docs/implementation-plan.md`:
+  - marked Phase 0 tasks complete for gitleaks config and CI baseline definition.
+- Updated `docs/README.md`:
+  - added security/CI baseline doc to the docs index.
+
+## 2026-05-21 - Iteration 6 (pre-commit planning and Ollama JS research)
+
+- Expanded `docs/security-ci-baseline.md`:
+  - added explicit pre-commit baseline checks (gitleaks + fast quality gate).
+  - documented recommendation to use lightweight hooks and keep full checks in CI.
+- Updated `docs/implementation-plan.md`:
+  - marked pre-commit baseline definition complete in Phase 0.
+  - added a Phase 6 task to implement pre-commit hooks.
+- Added `docs/ollama-js-integration-notes.md`:
+  - captured SDK constraints (streaming/abort/host/options) and required integration guardrails.
+  - documented initial timeout/fallback and observability requirements.
+- Updated `docs/research-matrix.md`:
+  - added dedicated Ollama JS SDK detection research topic with alternatives and recommendation.
+- Updated `docs/detection-approach-comparison.md`:
+  - added concrete implementation guardrails and missing-data checklist for decision lock.
+- Updated `docs/README.md`:
+  - added Ollama JS integration notes to docs index.
+
+## 2026-05-21 - Iteration 7 (early pre-commit and productionalization docs)
+
+- Added pre-commit hook scaffold:
+  - created `.githooks/pre-commit` running gitleaks with repo config.
+- Expanded `docs/security-ci-baseline.md`:
+  - documented current hook scaffold and activation options.
+- Updated `docs/implementation-plan.md`:
+  - moved pre-commit from late hardening to early scaffold completion.
+  - kept explicit activation as a remaining task.
+- Added `docs/productionalization-notes.md`:
+  - documented scale path (detector sidecar), load testing, resilience, and rollout priorities.
+- Added `docs/context-budget-guidelines.md`:
+  - defined minimal active docs set to avoid context bloat.
+- Updated `.cursor/rules/safe-iteration-loop.mdc`:
+  - added concise-docs/minimal-context rule.
+- Updated `docs/README.md`:
+  - indexed productionalization and context-budget docs.

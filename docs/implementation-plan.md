@@ -6,13 +6,23 @@
 
 ## Phased checklist
 
+### Phase 0: environment and requirement preflight
+
+- [x] Re-validate assignment requirements against `docs/original-assignment.md`.
+- [x] Verify local toolchain availability (`node`, `npm`, `docker`, `docker compose`, `gitleaks`).
+- [x] Create requirement traceability document.
+- [x] Add `.gitleaks.toml` (or equivalent) and define scan commands.
+- [x] Define CI baseline checks (secret scan + tests on push/PR).
+- [x] Define pre-commit baseline checks (secret scan + fast quality gate).
+- [x] Add pre-commit hook scaffold for local secret scanning.
+
 ### Phase 1: safety scaffolding
 
 - [x] Add `test-prompts/` to `.gitignore`.
 - [x] Add `test-prompts/` to `.claudeignore`.
-- [ ] Add `test-prompts/` to `.cursorignore`.
+- [x] Add `test-prompts/` to `.cursorignore`.
 - [x] Add Cursor rules for safe small-step iteration and untrusted corpus handling.
-- [ ] Add contributor guidance for safe corpus handling in repo documentation.
+- [x] Add contributor guidance for safe corpus handling in repo documentation.
 
 ### Phase 2: research-first decisions (highest priority)
 
@@ -49,6 +59,7 @@
 ### Phase 6: hardening and release readiness
 
 - [ ] Add secret scanning configuration and CI check.
+- [ ] Activate pre-commit hook in local git environment.
 - [ ] Add adversarial test variations and regression suite.
 - [ ] Document known limitations and operational runbook.
 - [ ] Final end-to-end validation against assignment acceptance criteria.
