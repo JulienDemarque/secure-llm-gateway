@@ -170,3 +170,25 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - added official references (OWASP + Node crypto docs).
 - Updated `docs/implementation-plan.md`:
   - marked auth architecture documentation task complete for review.
+
+## 2026-05-21 - Iteration 15 (db schema + ODM decision)
+
+- Re-checked assignment auth/persistence requirements (`Mongo` for hashed API keys and audit logs, `Redis` for rate limiting).
+- Updated `docs/technical-architecture-outline.md`:
+  - clarified API key provisioning as seed/bootstrap scope (no user auth flow required in challenge scope).
+  - added persistence stack decision: choose `mongoose` over `prisma` for this challenge.
+  - added concrete Mongo schema outlines for `api_keys`, `audit_logs`, and `redaction_tokens` with indexes.
+  - added Redis rate-limit key pattern.
+  - added official references for Mongoose and Prisma Mongo docs.
+- Updated `docs/implementation-plan.md`:
+  - marked persistence library decision + schema documentation task complete.
+
+## 2026-05-21 - Iteration 16 (PII token encryption clarification)
+
+- Updated `docs/technical-architecture-outline.md`:
+  - clarified that tokenized redaction stores encrypted original values only (admin audit path can decrypt).
+  - expanded `redaction_tokens` schema to include `ciphertext`, `iv`, `authTag`, and `keyId`.
+  - documented AES-256-GCM flow for encrypt/decrypt and the role of `token`.
+  - added required env secrets: `PII_ENCRYPTION_KEY_B64` and `PII_ENCRYPTION_KEY_ID`.
+- Updated `docs/implementation-plan.md`:
+  - marked redaction encryption/decryption design documentation complete.

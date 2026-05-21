@@ -75,6 +75,7 @@
 - `createdAt`: Date
 - `lastUsedAt`: Date (best effort update)
 - `label`: string (optional operator label)
+- `createdBy`: string (optional bootstrap marker: `seed` / `admin-tool`)
 
 ### Security notes
 
@@ -100,26 +101,142 @@
 - Valid `admin` key allowed on `/v1/audit`.
 - Constant-time compare function handles equal-length hash buffers correctly.
 
-## 6) Data model outline
+### API key provisioning (scope decision)
+
+- Challenge scope does not require end-user auth or self-serve API key issuance.
+- Initial keys should be provisioned via seed/bootstrap script into Mongo.
+- Plaintext key is generated once, shown once to operator, and only hashed value is persisted.
+- Future production extension can add an admin-authenticated key-management API.
+
+## 6) Persistence stack decision (Mongo/Redis)
+
+### Decision: choose Mongoose (not Prisma) for this challenge
+
+- Assignment explicitly requires MongoDB + Redis and middleware-focused implementation speed.
+- Mongoose fits direct Mongo document modeling, schema validation, indexes, and middleware hooks with minimal setup.
+- Prisma Mongo adds extra constraints and mapping complexity (for example `_id` mapping and replica-set transaction assumptions) that are unnecessary for this challenge scope.
+- Re-evaluate Prisma only if we later need a unified multi-database ORM layer.
+
+### Persistence components
+
+- MongoDB:
+  - `api_keys` collection for authentication and per-key policy.
+  - `audit_logs` collection for per-request security/audit records.
+  - `redaction_tokens` collection for reversible PII mapping (audit path only).
+- Redis:
+  - sliding-window counters for per-key rate limiting.
+
+## 7) Database schema outline
+
+### Mongo collection: `api_keys`
+
+- `_id`: ObjectId
+- `keyHash`: string, unique index
+- `role`: enum (`client`, `admin`)
+- `status`: enum (`active`, `revoked`)
+- `rateLimitPerMinute`: number (default 30)
+- `label`: string (optional)
+- `createdBy`: string (optional)
+- `createdAt`: Date
+- `lastUsedAt`: Date (best effort)
+
+Indexes:
+
+- unique index on `keyHash`
+- index on `status`
+
+### Mongo collection: `audit_logs`
+
+- `_id`: ObjectId
+- `timestamp`: Date
+- `correlationId`: string
+- `apiKeyId`: ObjectId | string
+- `model`: string
+- `requestHash`: string
+- `responseHash`: string (nullable for blocked/error paths)
+- `detectedThreats`: string[]
+- `decision`: enum (`allowed`, `blocked`, `error`)
+- `latencyMs`: number
+- `httpStatus`: number
+- `details`: object (control-specific metadata, sanitized)
+
+Indexes:
+
+- descending index on `timestamp`
+- compound index on (`apiKeyId`, `timestamp`)
+- index on `decision`
+
+### Mongo collection: `redaction_tokens`
+
+- `_id`: ObjectId
+- `token`: string (unique)
+- `ciphertext`: string (base64)
+- `iv`: string (base64)
+- `authTag`: string (base64)
+- `keyId`: string
+- `category`: enum (`email`, `phone`, `il_national_id`)
+- `correlationId`: string
+- `createdAt`: Date
+- `expiresAt`: Date (TTL)
+
+Indexes:
+
+- unique index on `token`
+- TTL index on `expiresAt`
+- index on `correlationId`
+
+### Redaction encryption/decryption design
+
+- Yes, redaction stores the original removed value encrypted only.
+- `token` is a random placeholder ID inserted into redacted text (for example `[PII_EMAIL:tok_ab12]`).
+- The token itself is not secret; it is a lookup key into `redaction_tokens`.
+
+Encryption at write time:
+
+1. Generate token.
+2. Encrypt original PII value using AES-256-GCM.
+3. Store `ciphertext`, `iv` (random 12-byte), `authTag`, and `keyId` with the token record.
+4. Replace original span in outbound prompt with tokenized placeholder.
+
+Decryption at audit time:
+
+1. Require admin-only audit access path.
+2. Fetch token record by `token` (and optionally `correlationId` guard).
+3. Resolve decryption key by `keyId`.
+4. Decrypt using AES-256-GCM and verify `authTag`.
+5. Return original value only in authorized audit response.
+
+Environment key material:
+
+- `PII_ENCRYPTION_KEY_B64` (required): base64-encoded 32-byte key for AES-256-GCM.
+- `PII_ENCRYPTION_KEY_ID` (required): identifier stored in each token record.
+- Never commit these values; keep in env/secret manager only.
+
+### Redis key patterns
+
+- `rl:{apiKeyId}:{windowEpoch}` -> integer counter
+- expiry = window duration + small buffer
+
+## 8) Data model outline
 
 - API keys: hash, role, limits, status, metadata.
 - Audit records: request hash, response hash, rule hits, timing, decision, correlation ID.
 - Redaction map: token-to-original mapping with restricted audit-path access.
 
-## 7) Observability and operations
+## 9) Observability and operations
 
 - Structured logs with correlation ID.
 - Health endpoint includes Mongo, Redis, and provider readiness.
 - Metrics: block rate, false-positive review queue count, p95 latency by control.
 
-## 8) Testing strategy
+## 10) Testing strategy
 
 - Unit tests for each security control.
 - Integration tests for full middleware pipeline.
 - Adversarial tests from prompt corpus and variations.
 - Regression tests for known bypasses.
 
-## 9) Prioritized architecture TODOs
+## 11) Prioritized architecture TODOs
 
 1. Research and decide detection integration mode.
 2. Freeze module interfaces and shared security context.
@@ -127,9 +244,11 @@
 4. Define test fixture format for corpus-driven testing.
 5. Define rollout safeguards (feature flags, shadow mode where needed).
 
-## 10) External references used
+## 12) External references used
 
 - Assignment requirements: `docs/original-assignment.md`
 - OWASP REST Security Cheat Sheet: <https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html>
 - OWASP API Security Top 10 (2023): <https://owasp.org/API-Security/editions/2023/en/0x11-t10/>
 - Node.js `crypto.timingSafeEqual`: <https://nodejs.org/dist/latest/docs/api/crypto.html#cryptotimingsafeequala-b>
+- Mongoose guide: <https://mongoosejs.com/docs/guide.html>
+- Prisma MongoDB docs: <https://www.prisma.io/docs/orm/overview/databases/mongodb>

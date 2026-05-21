@@ -39,6 +39,8 @@
 - [x] Create technical architecture outline document.
 - [x] Bootstrap minimal Node.js API placeholder with required routes.
 - [x] Document auth architecture details (flow, data model, roles, responses, tests) for review.
+- [x] Decide persistence library (`mongoose`) and document Mongo/Redis schema outline.
+- [x] Document PII redaction encryption/decryption design and required env secrets.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.
