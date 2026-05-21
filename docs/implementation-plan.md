@@ -24,6 +24,7 @@
 - [x] Add `test-prompts/` to `.cursorignore`.
 - [x] Add Cursor rules for safe small-step iteration and untrusted corpus handling.
 - [x] Add contributor guidance for safe corpus handling in repo documentation.
+- [x] Add code-commenting convention rule (concise JSDoc on exported/non-obvious functions).
 
 ### Phase 2: research-first decisions (highest priority)
 
@@ -41,6 +42,7 @@
 - [x] Document auth architecture details (flow, data model, roles, responses, tests) for review.
 - [x] Decide persistence library (`mongoose`) and document Mongo/Redis schema outline.
 - [x] Document PII redaction encryption/decryption design and required env secrets.
+- [x] Add function-level code comments across current implementation modules.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.
@@ -54,7 +56,7 @@
 
 ### Phase 5: full control implementation
 
-- [ ] Implement authentication module and tests.
+- [x] Implement authentication module and tests.
 - [ ] Implement rate limiting module and tests.
 - [ ] Implement prompt-injection detection module and tests.
 - [ ] Implement PII redaction module and tests.

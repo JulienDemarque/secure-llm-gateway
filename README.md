@@ -7,6 +7,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Install dependencies: `npm install`
 - Run in dev mode: `npm run dev`
 - Typecheck: `npm run typecheck`
+- Run tests: `npm test`
 - Build: `npm run build`
 
 ## Placeholder endpoints
@@ -29,3 +30,14 @@ git config --get core.hooksPath
 ```
 
 Expected output: `.githooks`
+
+## Auth bootstrap (Mongo)
+
+- Set `MONGODB_URI` in `.env`
+- Seed one admin and one client API key:
+
+```bash
+npm run seed:api-keys
+```
+
+This command prints plaintext keys once and stores only hashed keys in Mongo.

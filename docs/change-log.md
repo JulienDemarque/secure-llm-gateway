@@ -192,3 +192,68 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - added required env secrets: `PII_ENCRYPTION_KEY_B64` and `PII_ENCRYPTION_KEY_ID`.
 - Updated `docs/implementation-plan.md`:
   - marked redaction encryption/decryption design documentation complete.
+
+## 2026-05-21 - Iteration 17 (Mongo auth foundation + tests)
+
+- Re-checked assignment requirements before implementation (`x-api-key` auth, hashed keys in Mongo, `client/admin` roles, admin-only `/v1/audit`, independent middleware and auth tests).
+- Added Mongo/auth domain and persistence modules:
+  - `src/domain/auth.ts`
+  - `src/security/hash.ts`
+  - `src/db/mongoose.ts`
+  - `src/models/api-key.ts`
+  - `src/repositories/mongo-api-key-repository.ts`
+- Added auth middleware:
+  - `src/middleware/authenticate-api-key.ts`
+  - `src/middleware/require-admin.ts`
+  - `src/types/express.d.ts` request auth context typing
+- Wired app/server:
+  - `src/app.ts` now uses auth middleware for `/v1/chat` and `/v1/audit`
+  - `src/app.ts` health now reports Mongo readiness from connection state
+  - `src/server.ts` now bootstraps Mongo connection when `MONGODB_URI` is configured
+- Added API key seed script:
+  - `src/scripts/seed-api-keys.ts`
+  - generates admin/client keys, stores hash only, prints plaintext once
+- Added auth tests (Vitest + Supertest):
+  - `src/app.auth.test.ts` covering missing/invalid/revoked keys and client/admin role behavior
+- Updated project scripts and docs:
+  - `package.json` scripts: `test`, `test:watch`, `seed:api-keys`
+  - `README.md` updated with test command and auth seed usage
+  - `docs/implementation-plan.md` marked auth module/tests complete
+- Validation:
+  - `npm run typecheck` passed
+  - `npm test` passed (6 tests)
+  - `npm run build` passed
+
+## 2026-05-21 - Iteration 18 (function documentation rule)
+
+- Clarified `safeEqualHash` usage and intent in code:
+  - added concise JSDoc comments in `src/security/hash.ts` for `hashApiKey` and `safeEqualHash`.
+- Updated `.cursor/rules/safe-iteration-loop.mdc`:
+  - added rule to document functions with concise comments using Node.js/TypeScript best practice (JSDoc for exported and non-obvious logic).
+- Updated `docs/implementation-plan.md`:
+  - marked code-commenting convention rule as completed under safety scaffolding.
+
+## 2026-05-21 - Iteration 19 (comment pass across existing code)
+
+- Added concise function-level comments/JSDoc across current source modules:
+  - `src/app.ts`
+  - `src/server.ts`
+  - `src/domain/auth.ts`
+  - `src/db/mongoose.ts`
+  - `src/models/api-key.ts`
+  - `src/repositories/mongo-api-key-repository.ts`
+  - `src/middleware/authenticate-api-key.ts`
+  - `src/middleware/require-admin.ts`
+  - `src/types/express.d.ts`
+  - `src/scripts/seed-api-keys.ts`
+  - `src/app.auth.test.ts`
+- Kept comments focused on intent and security-sensitive behavior, avoiding line-by-line noise.
+- Updated test scripts in `package.json` to avoid accidentally running compiled `dist` tests:
+  - `test` now runs `vitest run src/app.auth.test.ts`
+  - `test:watch` now runs `vitest src/app.auth.test.ts`
+- Updated `docs/implementation-plan.md`:
+  - marked function-level comment pass complete under architecture baseline tasks.
+- Validation:
+  - `npm run typecheck` passed
+  - `npm test` passed (6 tests)
+  - `npm run build` passed
