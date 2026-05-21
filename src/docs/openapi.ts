@@ -53,8 +53,14 @@ export const openApiDocument = {
                       type: "object",
                       required: ["role", "content"],
                       properties: {
-                        role: { type: "string" },
-                        content: { type: "string" }
+                        role: {
+                          type: "string",
+                          enum: ["system", "user", "assistant"]
+                        },
+                        content: {
+                          type: "string",
+                          minLength: 1
+                        }
                       }
                     }
                   },
@@ -62,6 +68,20 @@ export const openApiDocument = {
                     type: "integer",
                     minimum: 1
                   }
+                },
+                example: {
+                  model: "gpt-4o",
+                  messages: [
+                    {
+                      role: "system",
+                      content: "You are a concise and helpful assistant."
+                    },
+                    {
+                      role: "user",
+                      content: "How are you today?"
+                    }
+                  ],
+                  max_tokens: 256
                 }
               }
             }

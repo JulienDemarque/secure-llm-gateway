@@ -457,3 +457,15 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - replaced proxy configuration guidance with LiteLLM SDK env guidance.
 - Updated `docs/implementation-plan.md`:
   - replaced proxy-env task wording with SDK-alignment task wording.
+
+## 2026-05-21 - Iteration 31 (Swagger chat example quality update)
+
+- Updated `src/docs/openapi.ts` for better Swagger "Try it out" defaults on `/v1/chat`:
+  - added role enum alignment with runtime validation (`system`, `user`, `assistant`).
+  - added `content` minimum length metadata.
+  - added realistic request example payload:
+    - model `gpt-4o`
+    - meaningful system/user messages
+    - `max_tokens: 256` instead of minimal value.
+- Updated `docs/implementation-plan.md`:
+  - marked Swagger default chat example improvement as complete.
