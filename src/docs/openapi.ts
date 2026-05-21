@@ -71,7 +71,8 @@ export const openApiDocument = {
           "501": { description: "Not implemented yet" },
           "503": { description: "Provider missing key/not ready" },
           "401": { description: "Missing or invalid API key" },
-          "400": { description: "Invalid request payload" }
+          "400": { description: "Invalid request payload" },
+          "429": { description: "Rate limit exceeded" }
         }
       }
     },
@@ -82,7 +83,8 @@ export const openApiDocument = {
         responses: {
           "501": { description: "Not implemented yet" },
           "401": { description: "Missing or invalid API key" },
-          "403": { description: "Admin role required" }
+          "403": { description: "Admin role required" },
+          "429": { description: "Rate limit exceeded" }
         }
       }
     }

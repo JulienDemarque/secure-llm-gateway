@@ -18,6 +18,12 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - `GET /openapi.json`
 - `GET /docs` (Swagger UI)
 
+## Current implemented controls
+
+- API key authentication (`x-api-key`) with Mongo-backed hashed key lookup.
+- Role-based authorization (`admin` required for `/v1/audit`).
+- Per-API-key Redis sliding-window rate limiting (default 30 req/min, configurable per key).
+
 ## Run with Docker
 
 Start API + Mongo + Redis:

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
 import { connectToMongoIfConfigured } from "./db/mongoose.js";
+import { connectToRedisIfConfigured } from "./db/redis.js";
 
 /** Default local development port when PORT env var is unset/invalid. */
 const DEFAULT_PORT = 3000;
@@ -12,6 +13,7 @@ const app = createApp();
 /** Initializes dependencies before accepting HTTP traffic. */
 async function bootstrap() {
   await connectToMongoIfConfigured();
+  await connectToRedisIfConfigured();
   app.listen(port, () => {
     // Keep startup log simple for local development.
     console.log(`SecureLLM Gateway placeholder listening on :${port}`);

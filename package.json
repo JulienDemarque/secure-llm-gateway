@@ -8,8 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/app.auth.test.ts",
-    "test:watch": "vitest src/app.auth.test.ts",
+    "test": "vitest run src/app.auth.test.ts src/app.rate-limit.test.ts",
+    "test:watch": "vitest src/app.auth.test.ts src/app.rate-limit.test.ts",
     "seed:api-keys": "tsx src/scripts/seed-api-keys.ts",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down"
@@ -21,6 +21,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.6.2",
+    "redis": "^5.12.1",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {

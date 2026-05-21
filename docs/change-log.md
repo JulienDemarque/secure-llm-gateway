@@ -311,3 +311,38 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - docs endpoints reachable (`/docs/` -> 200, `/openapi.json` -> 200)
 - Updated `docs/implementation-plan.md`:
   - marked minimal OpenAPI/Swagger documentation task complete.
+
+## 2026-05-21 - Iteration 23 (provider abstraction research TODOs)
+
+- Updated `docs/implementation-plan.md` Phase 2 checklist:
+  - added explicit research task for provider abstraction choice (`LiteLLM` vs `LangChain`).
+  - added explicit research task for `LangSmith` observability fit and scope decision.
+- Updated `docs/technical-architecture-outline.md` prioritized TODOs:
+  - added provider abstraction decision checkpoint.
+  - added tracing/observability integration decision checkpoint.
+
+## 2026-05-21 - Iteration 24 (Redis sliding-window rate limiting)
+
+- Re-checked assignment requirement for Redis per-API-key sliding-window limit (default 30 req/min, configurable per key).
+- Added rate-limit domain and infrastructure:
+  - `src/domain/rate-limit.ts` (rate-limit result/store interfaces)
+  - `src/db/redis.ts` (redis connect/health/client lifecycle)
+  - `src/repositories/redis-rate-limit-store.ts` (Redis sorted-set sliding-window implementation via Lua script)
+  - `src/repositories/noop-rate-limit-store.ts` (fallback when Redis is not configured)
+  - `src/middleware/rate-limit-per-api-key.ts`
+- Wired middleware into API flow:
+  - `src/app.ts` now applies rate limiting after auth on `/v1/chat` and `/v1/audit`
+  - `src/app.ts` health now reports Redis readiness from live client state
+  - `src/server.ts` now initializes Redis connection during bootstrap
+- Added tests:
+  - `src/app.rate-limit.test.ts` covering allow-under-limit, block-over-limit (`429`), and per-key isolation
+  - updated test scripts in `package.json` to run both auth and rate-limit suites
+- Updated docs:
+  - `README.md` now lists currently implemented controls
+  - `src/docs/openapi.ts` now includes `429` response documentation
+  - `docs/implementation-plan.md` marks rate limiting module/tests complete
+- Validation:
+  - `npm run typecheck` passed
+  - `npm test` passed (9 tests)
+  - `npm run build` passed
+  - Docker API rebuilt and `/healthz` reports `mongo: ready`, `redis: ready`

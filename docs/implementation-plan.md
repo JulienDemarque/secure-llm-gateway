@@ -30,6 +30,8 @@
 
 - [x] Create research matrix document.
 - [ ] Research tools and best practices (official docs, alternatives, recommendation).
+- [ ] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
+- [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.
 - [ ] Research repo architecture options (official docs, alternatives, recommendation).
 - [ ] Research testing strategy options (official docs, alternatives, recommendation).
 - [ ] Research security controls and standards (official docs, alternatives, recommendation).
@@ -58,7 +60,7 @@
 ### Phase 5: full control implementation
 
 - [x] Implement authentication module and tests.
-- [ ] Implement rate limiting module and tests.
+- [x] Implement rate limiting module and tests.
 - [ ] Implement prompt-injection detection module and tests.
 - [ ] Implement PII redaction module and tests.
 - [ ] Implement output validation module and tests.

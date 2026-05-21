@@ -239,10 +239,12 @@ Environment key material:
 ## 11) Prioritized architecture TODOs
 
 1. Research and decide detection integration mode.
-2. Freeze module interfaces and shared security context.
-3. Define audit schema and retention/PII policy.
-4. Define test fixture format for corpus-driven testing.
-5. Define rollout safeguards (feature flags, shadow mode where needed).
+2. Decide provider abstraction layer (direct SDK vs LiteLLM vs LangChain wrapper) for multi-provider consistency.
+3. Evaluate tracing/observability integration path (native logs/metrics vs optional LangSmith).
+4. Freeze module interfaces and shared security context.
+5. Define audit schema and retention/PII policy.
+6. Define test fixture format for corpus-driven testing.
+7. Define rollout safeguards (feature flags, shadow mode where needed).
 
 ## 12) External references used
 

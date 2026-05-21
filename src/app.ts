@@ -1,11 +1,16 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import swaggerUi from "swagger-ui-express";
 import type { ApiKeyRepository } from "./domain/auth.js";
+import type { RateLimitStore } from "./domain/rate-limit.js";
 import { getMongoHealthStatus } from "./db/mongoose.js";
+import { getRedisClient, getRedisHealthStatus } from "./db/redis.js";
 import { openApiDocument } from "./docs/openapi.js";
 import { authenticateApiKey } from "./middleware/authenticate-api-key.js";
+import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
+import { NoopRateLimitStore } from "./repositories/noop-rate-limit-store.js";
+import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 
 /** Minimal chat message shape expected by the placeholder API contract. */
 type ChatMessage = {
@@ -28,14 +33,10 @@ function hasProviderKey(): boolean {
   return Boolean(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
 }
 
-/** Redis readiness placeholder until active connectivity checks are implemented. */
-function getRedisHealthStatus(): "not-configured" | "not-ready" {
-  return process.env.REDIS_URL ? "not-ready" : "not-configured";
-}
-
 /** Optional wiring hooks used by tests to inject fake repositories. */
 type CreateAppOptions = {
   apiKeyRepository?: ApiKeyRepository;
+  rateLimitStore?: RateLimitStore;
 };
 
 /** Validates chat payload structure before security pipeline execution. */
@@ -60,7 +61,11 @@ function validateChatRequest(req: Request<unknown, unknown, ChatRequestBody>, re
 export function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const apiKeyRepository = options.apiKeyRepository ?? new MongoApiKeyRepository();
+  const redisClient = getRedisClient();
+  const rateLimitStore =
+    options.rateLimitStore ?? (redisClient ? new RedisRateLimitStore(redisClient) : new NoopRateLimitStore());
   const requireApiKey = authenticateApiKey(apiKeyRepository);
+  const enforceRateLimit = rateLimitPerApiKey(rateLimitStore);
   app.use(express.json({ limit: "100kb" }));
   app.get("/openapi.json", (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
@@ -78,7 +83,11 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
-  app.post("/v1/chat", requireApiKey, (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
+  app.post(
+    "/v1/chat",
+    requireApiKey,
+    enforceRateLimit,
+    (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
     if (!validateChatRequest(req, res)) {
       return;
     }
@@ -94,10 +103,11 @@ export function createApp(options: CreateAppOptions = {}) {
       error: "not-implemented",
       message: "Chat provider integration and security pipeline not implemented yet"
     });
-  });
+    }
+  );
 
   // Admin-only endpoint; audit implementation is intentionally deferred.
-  app.get("/v1/audit", requireApiKey, requireAdmin, (_req: Request, res: Response) => {
+  app.get("/v1/audit", requireApiKey, enforceRateLimit, requireAdmin, (_req: Request, res: Response) => {
     res.status(501).json({
       error: "not-implemented",
       message: "Audit retrieval pipeline not implemented yet"
