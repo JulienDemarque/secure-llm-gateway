@@ -32,7 +32,7 @@
 - [x] Record initial shortlist of prompt-injection and PII/security model options for later deep comparison.
 - [x] Complete first-pass deep comparison criteria and pros/cons across shortlisted prompt-injection and PII options.
 - [ ] Research tools and best practices (official docs, alternatives, recommendation).
-- [ ] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
+- [x] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
 - [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.
 - [ ] Research repo architecture options (official docs, alternatives, recommendation).
 - [ ] Research testing strategy options (official docs, alternatives, recommendation).
@@ -43,6 +43,8 @@
 
 - [x] Create technical architecture outline document.
 - [x] Bootstrap minimal Node.js API placeholder with required routes.
+- [x] Replace `/v1/chat` placeholder with a live LiteLLM-backed provider call path.
+- [x] Align `/v1/chat` to LiteLLM SDK-in-app mode (no LiteLLM proxy runtime requirement).
 - [x] Document auth architecture details (flow, data model, roles, responses, tests) for review.
 - [x] Decide persistence library (`mongoose`) and document Mongo/Redis schema outline.
 - [x] Document PII redaction encryption/decryption design and required env secrets.
@@ -75,6 +77,7 @@
 - [x] Validate Docker startup and Mongo seeding flow end-to-end.
 - [x] Document production Mongo authentication hardening note.
 - [ ] Add secret scanning configuration and CI check.
+- [x] Add TypeScript typecheck to pre-commit hook checks.
 - [ ] Activate pre-commit hook in local git environment.
 - [ ] Add adversarial test variations and regression suite.
 - [ ] Document known limitations and operational runbook.

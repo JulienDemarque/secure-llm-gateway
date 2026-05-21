@@ -2,6 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
+import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
 import { hashApiKey } from "./security/hash.js";
 
 /** Lightweight repository stub used to isolate middleware behavior in tests. */
@@ -19,6 +20,24 @@ class InMemoryApiKeyRepository implements ApiKeyRepository {
   }
 
   async touchLastUsed(_id: string): Promise<void> {}
+}
+
+/** Deterministic LLM stub to keep auth tests independent from network calls. */
+class FakeLlmClient implements LlmClient {
+  async createChatCompletion(request: LlmChatRequest): Promise<unknown> {
+    return {
+      id: "cmpl-auth-test",
+      model: request.model,
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: "ok"
+          }
+        }
+      ]
+    };
+  }
 }
 
 /** Creates a test app with seeded key states for auth/role scenarios. */
@@ -53,7 +72,7 @@ function makeApp() {
   process.env.OPENAI_API_KEY = "test-provider-key";
 
   return {
-    app: createApp({ apiKeyRepository: repository }),
+    app: createApp({ apiKeyRepository: repository, llmClient: new FakeLlmClient() }),
     keys: { clientRaw, adminRaw, revokedRaw }
   };
 }
@@ -102,7 +121,7 @@ describe("auth middleware", () => {
         model: "gpt-4o",
         messages: [{ role: "user", content: "hello" }]
       });
-    expect(response.status).toBe(501);
+    expect(response.status).toBe(200);
   });
 
   it("blocks client role on /v1/audit with 403", async () => {

@@ -1,2 +1,5 @@
 # Keep untrusted attack corpus out of Claude context by default.
 test-prompts/
+
+# hide sensitive information
+.env

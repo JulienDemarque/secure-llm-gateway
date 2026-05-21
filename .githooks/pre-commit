@@ -4,4 +4,7 @@ set -eu
 echo "Running pre-commit secret scan (gitleaks)..."
 gitleaks detect --config .gitleaks.toml --source . --no-git
 
+echo "Running pre-commit TypeScript typecheck..."
+npm run typecheck
+
 echo "Pre-commit checks passed."

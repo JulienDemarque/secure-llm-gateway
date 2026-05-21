@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import swaggerUi from "swagger-ui-express";
 import type { ApiKeyRepository } from "./domain/auth.js";
+import type { LlmChatMessage, LlmClient } from "./domain/llm.js";
 import type { RateLimitStore } from "./domain/rate-limit.js";
 import { getMongoHealthStatus } from "./db/mongoose.js";
 import { getRedisClient, getRedisHealthStatus } from "./db/redis.js";
@@ -8,25 +9,21 @@ import { openApiDocument } from "./docs/openapi.js";
 import { authenticateApiKey } from "./middleware/authenticate-api-key.js";
 import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
+import { LiteLlmClient } from "./providers/litellm-client.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
 import { NoopRateLimitStore } from "./repositories/noop-rate-limit-store.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 
-/** Minimal chat message shape expected by the placeholder API contract. */
-type ChatMessage = {
-  role: string;
-  content: string;
-};
-
 /** Request body contract for POST /v1/chat during bootstrap phase. */
 type ChatRequestBody = {
   model?: string;
-  messages?: ChatMessage[];
+  messages?: LlmChatMessage[];
   max_tokens?: number;
 };
 
 /** Current challenge-scoped model allowlist. */
 const SUPPORTED_MODELS = new Set(["claude-3-5-sonnet", "gpt-4o"]);
+const SUPPORTED_MESSAGE_ROLES = new Set(["system", "user", "assistant"]);
 
 /** Provider readiness check used by /healthz and chat fallback behavior. */
 function hasProviderKey(): boolean {
@@ -37,6 +34,7 @@ function hasProviderKey(): boolean {
 type CreateAppOptions = {
   apiKeyRepository?: ApiKeyRepository;
   rateLimitStore?: RateLimitStore;
+  llmClient?: LlmClient;
 };
 
 /** Validates chat payload structure before security pipeline execution. */
@@ -48,6 +46,18 @@ function validateChatRequest(req: Request<unknown, unknown, ChatRequestBody>, re
   }
   if (!Array.isArray(messages) || messages.length === 0) {
     res.status(400).json({ error: "messages must be a non-empty array" });
+    return false;
+  }
+  if (
+    messages.some(
+      (message) =>
+        typeof message !== "object" ||
+        message === null ||
+        !SUPPORTED_MESSAGE_ROLES.has(message.role) ||
+        typeof message.content !== "string"
+    )
+  ) {
+    res.status(400).json({ error: "each message must include valid role and string content" });
     return false;
   }
   if (max_tokens !== undefined && (!Number.isInteger(max_tokens) || max_tokens <= 0)) {
@@ -64,6 +74,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const redisClient = getRedisClient();
   const rateLimitStore =
     options.rateLimitStore ?? (redisClient ? new RedisRateLimitStore(redisClient) : new NoopRateLimitStore());
+  const llmClient = options.llmClient ?? new LiteLlmClient();
   const requireApiKey = authenticateApiKey(apiKeyRepository);
   const enforceRateLimit = rateLimitPerApiKey(rateLimitStore);
   app.use(express.json({ limit: "100kb" }));
@@ -87,22 +98,31 @@ export function createApp(options: CreateAppOptions = {}) {
     "/v1/chat",
     requireApiKey,
     enforceRateLimit,
-    (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
-    if (!validateChatRequest(req, res)) {
-      return;
-    }
+    async (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
+      if (!validateChatRequest(req, res)) {
+        return;
+      }
 
-    if (!hasProviderKey()) {
-      return res.status(503).json({
-        error: "provider-not-configured",
-        message: "Set OPENAI_API_KEY or ANTHROPIC_API_KEY to enable /v1/chat"
-      });
-    }
+      if (!hasProviderKey()) {
+        return res.status(503).json({
+          error: "provider-not-configured",
+          message: "Set OPENAI_API_KEY or ANTHROPIC_API_KEY to enable /v1/chat"
+        });
+      }
 
-    return res.status(501).json({
-      error: "not-implemented",
-      message: "Chat provider integration and security pipeline not implemented yet"
-    });
+      try {
+        const completion = await llmClient.createChatCompletion({
+          model: req.body.model ?? "",
+          messages: req.body.messages ?? [],
+          maxTokens: req.body.max_tokens
+        });
+        return res.status(200).json(completion);
+      } catch (error: unknown) {
+        return res.status(502).json({
+          error: "provider-request-failed",
+          message: error instanceof Error ? error.message : "Failed to call LiteLLM provider"
+        });
+      }
     }
   );
 

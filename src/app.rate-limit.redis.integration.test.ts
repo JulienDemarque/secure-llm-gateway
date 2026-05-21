@@ -3,6 +3,7 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
+import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 import { hashApiKey } from "./security/hash.js";
 
@@ -24,6 +25,17 @@ class InMemoryApiKeyRepository implements ApiKeyRepository {
   }
 
   async touchLastUsed(_id: string): Promise<void> {}
+}
+
+/** LLM stub used to isolate Redis rate-limit behavior in integration tests. */
+class FakeLlmClient implements LlmClient {
+  async createChatCompletion(request: LlmChatRequest): Promise<unknown> {
+    return {
+      id: "cmpl-redis-integration-test",
+      model: request.model,
+      choices: [{ message: { role: "assistant", content: "ok" } }]
+    };
+  }
 }
 
 describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis integration)", () => {
@@ -54,7 +66,8 @@ describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis i
     return {
       app: createApp({
         apiKeyRepository: repository,
-        rateLimitStore: new RedisRateLimitStore(redisClient)
+        rateLimitStore: new RedisRateLimitStore(redisClient),
+        llmClient: new FakeLlmClient()
       }),
       keys: { keyA, keyB }
     };
@@ -115,6 +128,6 @@ describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis i
       .send({ model: "gpt-4o", messages: [{ role: "user", content: "b-1" }] });
 
     expect(keyABlocked.status).toBe(429);
-    expect(keyBAllowed.status).toBe(501);
+    expect(keyBAllowed.status).toBe(200);
   });
 });

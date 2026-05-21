@@ -23,3 +23,13 @@ original-assignment.md
  to see if we need to classify the prompt injections in a specific way? It wasn't really clear to me"
 
  "yeah write down the options and let's do a deep search and pros and cons later"
+
+
+ # Debug prompt
+
+ "I am still getting {
+  "error": "not-implemented",
+  "message": "Chat provider integration and security pipeline not implemented yet"
+} in swagger, how do I rebuild docker compose, I tried docker compose down but it didn't change"
+
+"wait what are you talking about, please find litellm documentation, we just want to use the sdk, not the proxy. pretty sure we don't need a base rurl pointing at openai, that defeats the purpose of litellm..."

@@ -399,3 +399,61 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - refined recommendation: deterministic baseline for required categories first, then hybrid extension.
 - Updated `docs/implementation-plan.md`:
   - marked the deep comparison pass task complete under Phase 2.
+
+## 2026-05-21 - Iteration 28 (LiteLLM call path + pre-commit typecheck)
+
+- Re-checked assignment integration requirements before implementation:
+  - `/v1/chat` must perform a real provider call when key is present.
+  - service should return clear `503` when provider token is missing.
+- Added provider abstraction + LiteLLM adapter:
+  - `src/domain/llm.ts` defines provider client contract.
+  - `src/providers/litellm-client.ts` adds LiteLLM-compatible `/chat/completions` HTTP client with timeout support.
+- Updated `src/app.ts`:
+  - injected `llmClient` through `createApp` options for testability.
+  - replaced `/v1/chat` `501` placeholder with real LiteLLM-backed call.
+  - added `502 provider-request-failed` response on upstream failure.
+  - expanded provider readiness check to include `LITELLM_API_KEY`.
+- Updated tests to stay deterministic and network-free:
+  - `src/app.auth.test.ts`
+  - `src/app.rate-limit.test.ts`
+  - `src/app.rate-limit.redis.integration.test.ts`
+  - each now injects a fake LLM client and asserts `200` on allowed `/v1/chat` calls.
+- Updated API/docs:
+  - `src/docs/openapi.ts` now documents `/v1/chat` `200` and `502` responses.
+  - `README.md` now documents LiteLLM env vars and current pre-commit checks.
+- Updated pre-commit hook:
+  - `.githooks/pre-commit` now runs both gitleaks and `npm run typecheck`.
+- Updated `docs/implementation-plan.md`:
+  - marked provider-abstraction decision complete (`LiteLLM` path selected).
+  - marked live LiteLLM call path task complete.
+  - marked pre-commit TypeScript check addition complete.
+
+## 2026-05-21 - Iteration 29 (LiteLLM Docker env passthrough fix)
+
+- Diagnosed `/v1/chat` runtime `provider-request-failed` with `fetch failed` in Docker:
+  - API container defaulted to `http://localhost:4000` for LiteLLM.
+  - no LiteLLM service was bound inside the API container namespace.
+- Updated `docker-compose.yml`:
+  - added `LITELLM_BASE_URL`, `LITELLM_TIMEOUT_MS`, and `LITELLM_API_KEY` passthrough to the `api` service env.
+- Updated `README.md`:
+  - added troubleshooting note to set `LITELLM_BASE_URL=https://api.openai.com/v1` when no local LiteLLM proxy is running yet.
+- Updated `docs/implementation-plan.md`:
+  - marked Docker Compose LiteLLM env passthrough task complete.
+
+## 2026-05-21 - Iteration 30 (LiteLLM SDK alignment for Node)
+
+- Re-checked LiteLLM documentation paths and aligned implementation to SDK-in-app usage for this Node codebase.
+- Added dependency:
+  - `litellm` package in `package.json`.
+- Updated `src/providers/litellm-client.ts`:
+  - replaced proxy-style HTTP fetch logic with LiteLLM SDK `completion()` call.
+  - removed proxy-only base URL/timeout/token handling from this adapter.
+- Updated `src/app.ts`:
+  - provider readiness now checks provider keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) only.
+  - clarified 503 configuration message accordingly.
+- Updated `docker-compose.yml`:
+  - removed LiteLLM proxy env passthrough variables previously added (`LITELLM_BASE_URL`, `LITELLM_TIMEOUT_MS`, `LITELLM_API_KEY`).
+- Updated `README.md`:
+  - replaced proxy configuration guidance with LiteLLM SDK env guidance.
+- Updated `docs/implementation-plan.md`:
+  - replaced proxy-env task wording with SDK-alignment task wording.

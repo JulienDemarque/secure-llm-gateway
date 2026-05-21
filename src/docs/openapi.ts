@@ -68,7 +68,8 @@ export const openApiDocument = {
           }
         },
         responses: {
-          "501": { description: "Not implemented yet" },
+          "200": { description: "Provider completion response" },
+          "502": { description: "Provider request failed" },
           "503": { description: "Provider missing key/not ready" },
           "401": { description: "Missing or invalid API key" },
           "400": { description: "Invalid request payload" },

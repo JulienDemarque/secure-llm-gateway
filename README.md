@@ -24,6 +24,16 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - API key authentication (`x-api-key`) with Mongo-backed hashed key lookup.
 - Role-based authorization (`admin` required for `/v1/audit`).
 - Per-API-key Redis sliding-window rate limiting (default 30 req/min, configurable per key).
+- Live `/v1/chat` call path via LiteLLM-compatible `/chat/completions` endpoint (guardrails pending).
+
+## Provider configuration (LiteLLM SDK path)
+
+Set one provider key for the LiteLLM SDK call:
+
+- `OPENAI_API_KEY`, or
+- `ANTHROPIC_API_KEY`
+
+`/v1/chat` returns `503` when neither key is configured.
 
 ## Run with Docker
 
@@ -53,6 +63,11 @@ git config --get core.hooksPath
 ```
 
 Expected output: `.githooks`
+
+Current pre-commit checks:
+
+- gitleaks secret scan
+- TypeScript typecheck (`npm run typecheck`)
 
 ## Auth bootstrap (Mongo)
 

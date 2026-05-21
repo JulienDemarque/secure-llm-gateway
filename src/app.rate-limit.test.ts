@@ -2,6 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
+import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
 import type { RateLimitResult, RateLimitStore } from "./domain/rate-limit.js";
 import { hashApiKey } from "./security/hash.js";
 
@@ -38,6 +39,17 @@ class InMemoryRateLimitStore implements RateLimitStore {
   }
 }
 
+/** Stable LLM stub so rate-limit tests only validate middleware behavior. */
+class FakeLlmClient implements LlmClient {
+  async createChatCompletion(request: LlmChatRequest): Promise<unknown> {
+    return {
+      id: "cmpl-rate-limit-test",
+      model: request.model,
+      choices: [{ message: { role: "assistant", content: "ok" } }]
+    };
+  }
+}
+
 function makeApp() {
   const keyA = "client-key-a";
   const keyB = "client-key-b";
@@ -63,7 +75,8 @@ function makeApp() {
   return {
     app: createApp({
       apiKeyRepository: repository,
-      rateLimitStore: new InMemoryRateLimitStore()
+      rateLimitStore: new InMemoryRateLimitStore(),
+      llmClient: new FakeLlmClient()
     }),
     keys: { keyA, keyB }
   };
@@ -81,8 +94,8 @@ describe("rate limiting middleware", () => {
       .set("x-api-key", keys.keyA)
       .send({ model: "gpt-4o", messages: [{ role: "user", content: "hello again" }] });
 
-    expect(first.status).toBe(501);
-    expect(second.status).toBe(501);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
   });
 
   it("returns 429 when requests exceed per-key limit", async () => {
@@ -125,6 +138,6 @@ describe("rate limiting middleware", () => {
       .send({ model: "gpt-4o", messages: [{ role: "user", content: "b1" }] });
 
     expect(keyAThird.status).toBe(429);
-    expect(keyBFirst.status).toBe(501);
+    expect(keyBFirst.status).toBe(200);
   });
 });
