@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
+import type {
+  PromptInjectionDetectionResult,
+  PromptInjectionDetector,
+  PromptMessage
+} from "./domain/prompt-injection.js";
 import { hashApiKey } from "./security/hash.js";
 
 /** Lightweight repository stub used to isolate middleware behavior in tests. */
@@ -40,6 +45,18 @@ class FakeLlmClient implements LlmClient {
   }
 }
 
+/** Default allow detector for auth tests. */
+class AllowPromptInjectionDetector implements PromptInjectionDetector {
+  async detect(_messages: PromptMessage[]): Promise<PromptInjectionDetectionResult> {
+    return {
+      blocked: false,
+      category: "unknown",
+      confidence: 0,
+      rationale: "allow"
+    };
+  }
+}
+
 /** Creates a test app with seeded key states for auth/role scenarios. */
 function makeApp() {
   const clientRaw = "client-key";
@@ -72,7 +89,11 @@ function makeApp() {
   process.env.OPENAI_API_KEY = "test-provider-key";
 
   return {
-    app: createApp({ apiKeyRepository: repository, llmClient: new FakeLlmClient() }),
+    app: createApp({
+      apiKeyRepository: repository,
+      llmClient: new FakeLlmClient(),
+      promptInjectionDetector: new AllowPromptInjectionDetector()
+    }),
     keys: { clientRaw, adminRaw, revokedRaw }
   };
 }

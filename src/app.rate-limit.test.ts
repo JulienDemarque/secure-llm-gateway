@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
+import type {
+  PromptInjectionDetectionResult,
+  PromptInjectionDetector,
+  PromptMessage
+} from "./domain/prompt-injection.js";
 import type { RateLimitResult, RateLimitStore } from "./domain/rate-limit.js";
 import { hashApiKey } from "./security/hash.js";
 
@@ -50,6 +55,18 @@ class FakeLlmClient implements LlmClient {
   }
 }
 
+/** Default allow detector for rate-limit tests. */
+class AllowPromptInjectionDetector implements PromptInjectionDetector {
+  async detect(_messages: PromptMessage[]): Promise<PromptInjectionDetectionResult> {
+    return {
+      blocked: false,
+      category: "unknown",
+      confidence: 0,
+      rationale: "allow"
+    };
+  }
+}
+
 function makeApp() {
   const keyA = "client-key-a";
   const keyB = "client-key-b";
@@ -76,7 +93,8 @@ function makeApp() {
     app: createApp({
       apiKeyRepository: repository,
       rateLimitStore: new InMemoryRateLimitStore(),
-      llmClient: new FakeLlmClient()
+      llmClient: new FakeLlmClient(),
+      promptInjectionDetector: new AllowPromptInjectionDetector()
     }),
     keys: { keyA, keyB }
   };

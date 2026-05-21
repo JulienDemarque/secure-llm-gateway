@@ -469,3 +469,90 @@ Tracks repository changes made during this project. Each entry summarizes what c
     - `max_tokens: 256` instead of minimal value.
 - Updated `docs/implementation-plan.md`:
   - marked Swagger default chat example improvement as complete.
+
+## 2026-05-21 - Iteration 32 (model-assisted prompt-injection guard baseline)
+
+- Implemented model-assisted prompt-injection detection path (structured output, no hardcoded-only detector):
+  - added `src/domain/prompt-injection.ts` with detector contract and normalized result shape.
+  - added `src/detectors/generic-llm-prompt-injection-detector.ts` using LiteLLM `completion()` with JSON-only classification prompt.
+  - added `src/middleware/detect-prompt-injection.ts` to enforce pre-provider blocking.
+- Wired middleware into `/v1/chat` chain in `src/app.ts`:
+  - route order now includes prompt-injection detection before provider execution.
+  - returns `400` on detection with category/confidence/rationale payload.
+  - returns `502` on detector runtime failure.
+- Added tests for prompt guard behavior:
+  - new `src/app.prompt-injection.test.ts` covering allow, block, and detector-failure scenarios.
+  - updated existing auth/rate-limit tests to inject an allow detector stub and remain network-free.
+  - updated `package.json` test scripts to include prompt-injection tests.
+- Updated docs:
+  - `src/docs/openapi.ts` response descriptions now include detection-block and detector/provider failure semantics.
+  - `README.md` current-controls section now reflects LiteLLM SDK call path + model-assisted prompt-injection guard.
+  - `docs/implementation-plan.md` now tracks this baseline guard milestone as completed.
+
+## 2026-05-21 - Iteration 33 (switch prompt guard to local Ollama)
+
+- Re-aligned prompt-injection detector runtime to local model execution:
+  - updated `src/detectors/generic-llm-prompt-injection-detector.ts` to use Ollama JS SDK (`ollama` package) instead of LiteLLM for detector calls.
+  - detector now defaults to:
+    - `OLLAMA_HOST=http://127.0.0.1:11434`
+    - `PROMPT_GUARD_MODEL=llama-guard3`
+  - retained structured JSON output contract and parser behavior.
+- Added dependency:
+  - installed `ollama` package.
+- Updated runtime configuration docs:
+  - `README.md` now includes "Prompt guard configuration (local Ollama)" with Docker host guidance (`host.docker.internal`).
+- Updated Docker compose passthrough:
+  - `docker-compose.yml` now forwards `OLLAMA_HOST` and `PROMPT_GUARD_MODEL` into API container.
+- Updated `docs/implementation-plan.md`:
+  - marked "Validate Ollama JS SDK + local classifier integration constraints" as complete.
+
+## 2026-05-21 - Iteration 34 (Compose-managed internal Ollama service)
+
+- Updated `docker-compose.yml` to run Ollama as an internal service:
+  - added `ollama` service (`ollama/ollama:latest`) with persistent `ollama_data` volume.
+  - exposed port `11434` only inside Compose network (`expose`, no host `ports` mapping).
+  - added Ollama healthcheck (`ollama list`).
+  - updated API default `OLLAMA_HOST` to `http://ollama:11434`.
+  - added API dependency on healthy `ollama` service.
+- Updated `README.md`:
+  - Docker section now states stack includes Ollama.
+  - added command to pull prompt-guard model in-container: `docker compose exec ollama ollama pull llama-guard3`.
+  - documented that Ollama is internal-only by default in Compose.
+- Updated `docs/implementation-plan.md`:
+  - marked internal-only Docker Compose Ollama service task as complete.
+
+## 2026-05-21 - Iteration 35 (healthz includes Ollama readiness)
+
+- Added Ollama health helper:
+  - created `src/db/ollama.ts` with lightweight `GET /api/version` probe and timeout-based `ready/not-ready` status.
+- Updated `src/app.ts`:
+  - `/healthz` is now async and includes `dependencies.ollama`.
+  - health payload now reports `mongo`, `redis`, `ollama`, and provider readiness.
+- Updated `README.md`:
+  - documented that `/healthz` now includes Ollama dependency status.
+- Updated `docs/implementation-plan.md`:
+  - marked Ollama health reporting task complete.
+
+## 2026-05-21 - Iteration 36 (generic guard model + strict structured output validation)
+
+- Updated prompt-injection detector to better align with generic-model strategy:
+  - changed default `PROMPT_GUARD_MODEL` from `llama-guard3` to `llama3.1:8b`.
+- Hardened structured-output enforcement in `src/detectors/generic-llm-prompt-injection-detector.ts`:
+  - switched Ollama `chat` call from `format: "json"` to explicit JSON schema object in `format`.
+  - added strict runtime validation with `zod` to ensure output matches expected shape exactly.
+  - added rationale sanitization/truncation to reduce risk from unsafe model output content.
+  - changed invalid/empty detector output behavior to error (blocked by middleware `502`) instead of silent allow.
+- Added dependency:
+  - installed `zod` for runtime schema validation.
+- Updated docs:
+  - `README.md` now documents default guard model as `llama3.1:8b`.
+  - Docker pull command updated to `docker compose exec ollama ollama pull llama3.1:8b`.
+  - `docs/implementation-plan.md` now marks structured detector output schema enforcement as completed.
+
+## 2026-05-21 - Iteration 37 (fix empty guard model env causing detector failure)
+
+- Fixed detector runtime bug where empty `PROMPT_GUARD_MODEL` produced Ollama error `model is required`:
+  - updated `src/detectors/generic-llm-prompt-injection-detector.ts` to treat unset/empty/whitespace env values as missing and fall back to defaults.
+  - applied this fallback logic to both `PROMPT_GUARD_MODEL` and `OLLAMA_HOST`.
+- Updated `docker-compose.yml`:
+  - changed default API env passthrough for `PROMPT_GUARD_MODEL` to `llama3.1:8b` instead of empty string.

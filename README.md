@@ -24,7 +24,8 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - API key authentication (`x-api-key`) with Mongo-backed hashed key lookup.
 - Role-based authorization (`admin` required for `/v1/audit`).
 - Per-API-key Redis sliding-window rate limiting (default 30 req/min, configurable per key).
-- Live `/v1/chat` call path via LiteLLM-compatible `/chat/completions` endpoint (guardrails pending).
+- Live `/v1/chat` call path via LiteLLM SDK with provider API keys from env.
+- Model-assisted prompt-injection guard on `/v1/chat` using structured JSON detector output.
 
 ## Provider configuration (LiteLLM SDK path)
 
@@ -35,13 +36,32 @@ Set one provider key for the LiteLLM SDK call:
 
 `/v1/chat` returns `503` when neither key is configured.
 
+## Prompt guard configuration (local Ollama)
+
+Prompt-injection detection uses a local Ollama model by default.
+
+- `OLLAMA_HOST` (optional, default `http://127.0.0.1:11434` outside Docker, `http://ollama:11434` in Docker Compose)
+- `PROMPT_GUARD_MODEL` (optional, default `llama3.1:8b`)
+
+If API runs in Docker and Ollama runs on host machine (macOS), set:
+
+- `OLLAMA_HOST=http://host.docker.internal:11434`
+
 ## Run with Docker
 
-Start API + Mongo + Redis:
+Start API + Mongo + Redis + Ollama:
 
 ```bash
 docker compose up -d --build
 ```
+
+Pull the prompt-guard model inside Compose network:
+
+```bash
+docker compose exec ollama ollama pull llama3.1:8b
+```
+
+Ollama is only exposed to other Compose services (no host `11434` port mapping by default).
 
 Stop stack:
 
@@ -91,6 +111,8 @@ Quick health check:
 ```bash
 curl http://localhost:3000/healthz
 ```
+
+`/healthz` now reports `mongo`, `redis`, `ollama`, and provider readiness.
 
 Swagger UI for manual testing:
 

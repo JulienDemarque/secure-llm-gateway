@@ -32,4 +32,6 @@ original-assignment.md
   "message": "Chat provider integration and security pipeline not implemented yet"
 } in swagger, how do I rebuild docker compose, I tried docker compose down but it didn't change"
 
-"wait what are you talking about, please find litellm documentation, we just want to use the sdk, not the proxy. pretty sure we don't need a base rurl pointing at openai, that defeats the purpose of litellm..."
+"wait what are you talking about, please find litellm documentation, we just want to use the sdk, not the proxy. pretty sure we don't need a base url pointing at openai, that defeats the purpose of litellm..."
+
+"wait we are using litellm for the prompt check, can we still use ollama, I feel it make more sense to use a local llm so I don't get banned from my provider lol"

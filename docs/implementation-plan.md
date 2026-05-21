@@ -51,6 +51,7 @@
 - [x] Add function-level code comments across current implementation modules.
 - [x] Add minimal OpenAPI/Swagger docs for manual endpoint validation.
 - [x] Improve Swagger default `/v1/chat` payload example for realistic manual testing.
+- [x] Extend `/healthz` dependency reporting with Ollama detector readiness.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.
@@ -58,7 +59,8 @@
 ### Phase 4: detection implementation strategy
 
 - [x] Create detection approach comparison document.
-- [ ] Validate Ollama JS SDK + local classifier integration constraints.
+- [x] Validate Ollama JS SDK + local classifier integration constraints.
+- [x] Enforce structured detector output schema (Ollama `format` JSON schema + runtime validation).
 - [ ] Define detector timeout/fallback policy and audit semantics.
 - [ ] Define benchmark plan (latency, false positives, false negatives).
 
@@ -67,6 +69,7 @@
 - [x] Implement authentication module and tests.
 - [x] Implement rate limiting module and tests.
 - [x] Add Redis-backed integration tests for rate limiting behavior.
+- [x] Add initial model-assisted prompt-injection guard middleware with structured JSON detector output.
 - [ ] Implement prompt-injection detection module and tests.
 - [ ] Implement PII redaction module and tests.
 - [ ] Implement output validation module and tests.
@@ -75,6 +78,7 @@
 ### Phase 6: hardening and release readiness
 
 - [x] Add `Dockerfile` and `docker-compose.yml` for API + Mongo + Redis.
+- [x] Add internal-only Docker Compose Ollama service for local prompt guard runtime.
 - [x] Validate Docker startup and Mongo seeding flow end-to-end.
 - [x] Document production Mongo authentication hardening note.
 - [ ] Add secret scanning configuration and CI check.

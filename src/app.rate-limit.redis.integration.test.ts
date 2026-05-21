@@ -4,6 +4,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
+import type {
+  PromptInjectionDetectionResult,
+  PromptInjectionDetector,
+  PromptMessage
+} from "./domain/prompt-injection.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 import { hashApiKey } from "./security/hash.js";
 
@@ -38,6 +43,18 @@ class FakeLlmClient implements LlmClient {
   }
 }
 
+/** Default allow detector for Redis integration tests. */
+class AllowPromptInjectionDetector implements PromptInjectionDetector {
+  async detect(_messages: PromptMessage[]): Promise<PromptInjectionDetectionResult> {
+    return {
+      blocked: false,
+      category: "unknown",
+      confidence: 0,
+      rationale: "allow"
+    };
+  }
+}
+
 describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis integration)", () => {
   let redisClient: RedisClientType;
 
@@ -67,7 +84,8 @@ describe.skipIf(!RUN_REDIS_INTEGRATION_TESTS)("rate limiting middleware (Redis i
       app: createApp({
         apiKeyRepository: repository,
         rateLimitStore: new RedisRateLimitStore(redisClient),
-        llmClient: new FakeLlmClient()
+        llmClient: new FakeLlmClient(),
+        promptInjectionDetector: new AllowPromptInjectionDetector()
       }),
       keys: { keyA, keyB }
     };

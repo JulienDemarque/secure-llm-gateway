@@ -10,6 +10,8 @@ services:
       REDIS_URL: "redis://redis:6379"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OLLAMA_HOST: "${OLLAMA_HOST:-http://ollama:11434}"
+      PROMPT_GUARD_MODEL: "${PROMPT_GUARD_MODEL:-llama3.1:8b}"
       PII_ENCRYPTION_KEY_ID: "${PII_ENCRYPTION_KEY_ID:-pii-key-v1}"
       PII_ENCRYPTION_KEY_B64: "${PII_ENCRYPTION_KEY_B64:-}"
     ports:
@@ -18,6 +20,8 @@ services:
       mongo:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
 
   mongo:
@@ -28,7 +32,8 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 10s
       timeout: 5s
       retries: 8
@@ -46,6 +51,20 @@ services:
       timeout: 5s
       retries: 8
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: secure-llm-gateway-ollama
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
 volumes:
   mongo_data:
   redis_data:
+  ollama_data:
