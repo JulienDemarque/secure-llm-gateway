@@ -346,3 +346,36 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - `npm test` passed (9 tests)
   - `npm run build` passed
   - Docker API rebuilt and `/healthz` reports `mongo: ready`, `redis: ready`
+
+## 2026-05-21 - Iteration 25 (Redis integration tests for rate limiting)
+
+- Added real Redis-backed integration test suite:
+  - `src/app.rate-limit.redis.integration.test.ts`
+  - validates `429` on limit exceed using live Redis counters
+  - validates per-key counter isolation using live Redis state
+- Added dedicated script in `package.json`:
+  - `test:integration:redis` (enabled via `ENABLE_REDIS_INTEGRATION_TESTS=1`)
+- Updated `README.md`:
+  - documented Redis integration test command.
+- Updated `docs/implementation-plan.md`:
+  - marked Redis-backed integration testing for rate limiting as complete.
+- Validation:
+  - `npm run typecheck` passed
+  - `npm test` passed (9 tests)
+  - `npm run test:integration:redis` passed (2 tests)
+  - `npm run build` passed
+
+## 2026-05-21 - Iteration 26 (security model options shortlist)
+
+- Re-checked relevant assignment controls before continuing research notes (`prompt-injection detection`, `PII redaction`).
+- Updated `docs/research-matrix.md`:
+  - added a shortlist of prompt-injection candidate models for later deep analysis:
+    - Ollama-native `llama-guard3`
+    - Hugging Face candidates (`Prompt-Guard 2`, `deberta-v3-base-prompt-injection-v2`, `prompt-injection-sentinel`)
+  - added a dedicated shortlist section for PII/security detection options:
+    - Microsoft Presidio
+    - GLiNER
+    - rule-only and hybrid alternatives
+  - documented that detailed pros/cons benchmarking remains a separate follow-up pass.
+- Updated `docs/implementation-plan.md`:
+  - marked the "initial model shortlist recorded" research task complete.

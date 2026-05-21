@@ -29,6 +29,7 @@
 ### Phase 2: research-first decisions (highest priority)
 
 - [x] Create research matrix document.
+- [x] Record initial shortlist of prompt-injection and PII/security model options for later deep comparison.
 - [ ] Research tools and best practices (official docs, alternatives, recommendation).
 - [ ] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
 - [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.
@@ -61,6 +62,7 @@
 
 - [x] Implement authentication module and tests.
 - [x] Implement rate limiting module and tests.
+- [x] Add Redis-backed integration tests for rate limiting behavior.
 - [ ] Implement prompt-injection detection module and tests.
 - [ ] Implement PII redaction module and tests.
 - [ ] Implement output validation module and tests.

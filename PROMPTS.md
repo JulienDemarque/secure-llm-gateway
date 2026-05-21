@@ -17,3 +17,9 @@ for the prompt injection detection, I am thinking to use olama, either as a side
 # Example prompts:
 
 "ok cool, actually I forgot to ask you to check node express doc and to follow their documentation, can you add it as a rule in cursor rules, that for any implementation, we want to search official doc, or do research on best practices."
+
+"hey can you check the 
+original-assignment.md
+ to see if we need to classify the prompt injections in a specific way? It wasn't really clear to me"
+
+ "yeah write down the options and let's do a deep search and pros and cons later"

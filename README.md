@@ -8,6 +8,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Run in dev mode: `npm run dev`
 - Typecheck: `npm run typecheck`
 - Run tests: `npm test`
+- Run Redis integration tests: `npm run test:integration:redis`
 - Build: `npm run build`
 
 ## Placeholder endpoints

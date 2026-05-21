@@ -24,9 +24,32 @@ Research is the top implementation priority. For each topic, this document track
   - In-process SDK client (`ollama` package) in gateway process
   - Sidecar detector service calling Ollama server
   - Cloud-hosted Ollama endpoint with SDK client and auth headers
+- Candidate model options (shortlist for deep evaluation)
+  - Ollama-native: `llama-guard3` (primary starting point for local moderation-style screening).
+  - Hugging Face candidates for later custom hosting:
+    - `meta-llama/Prompt-Guard-2-22M`
+    - `protectai/deberta-v3-base-prompt-injection-v2`
+    - `qualifire/prompt-injection-sentinel`
 - Best-fit recommendation
   - Start with in-process Ollama JS SDK behind a detector interface, with strict timeout, fallback policy, and audit tagging.
   - Keep sidecar-compatible interface boundaries so deployment can switch without endpoint contract changes.
+  - Use structured JSON output schema for detector decisions and evidence fields.
+  - Defer deep benchmark and false-positive/false-negative comparison to a dedicated evaluation pass.
+
+## Topic: PII/security detection model options (shortlist)
+
+- Official sources
+  - Microsoft Presidio: <https://microsoft.github.io/presidio/>
+  - GLiNER: <https://github.com/urchade/GLiNER>
+- Alternatives
+  - Regex/rule-only PII detection
+  - Presidio analyzer/anonymizer pipeline
+  - GLiNER-based NER extraction with policy post-processing
+  - Hybrid (rules + model-assisted entity detection)
+- Best-fit recommendation
+  - Keep current gateway plan as hybrid-capable: deterministic masking rules first, model-assisted PII detection as optional plug-in.
+  - Preserve middleware contract so PII strategy can evolve without route contract changes.
+  - Run deeper pros/cons and latency/accuracy analysis before selecting a default model path.
 
 ## Topic: repo architecture
 
