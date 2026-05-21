@@ -26,6 +26,11 @@ function hasProviderKey(): boolean {
   return Boolean(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
 }
 
+/** Redis readiness placeholder until active connectivity checks are implemented. */
+function getRedisHealthStatus(): "not-configured" | "not-ready" {
+  return process.env.REDIS_URL ? "not-ready" : "not-configured";
+}
+
 /** Optional wiring hooks used by tests to inject fake repositories. */
 type CreateAppOptions = {
   apiKeyRepository?: ApiKeyRepository;
@@ -61,7 +66,7 @@ export function createApp(options: CreateAppOptions = {}) {
       status: "ok",
       dependencies: {
         mongo: getMongoHealthStatus(),
-        redis: "not-configured",
+        redis: getRedisHealthStatus(),
         provider: hasProviderKey() ? "ready" : "missing-api-key"
       }
     });

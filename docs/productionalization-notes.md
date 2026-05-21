@@ -35,6 +35,10 @@ Covers post-assignment hardening and scale priorities while keeping assignment s
 - Expand secret scanning to include pre-receive/CI enforcement only (not just local hooks).
 - Add red-team regression pack and periodic drift checks.
 - Formalize audit retention and access controls for redaction reversal data.
+- Harden Mongo deployment authentication:
+  - local convenience setup may run Mongo without auth, but production must require credentials.
+  - configure DB users/roles, strong secrets, and least-privilege app account.
+  - enforce network isolation and disable public exposure of database ports.
 
 ## 5) Recommended order after assignment baseline
 

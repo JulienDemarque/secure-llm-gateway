@@ -16,6 +16,20 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - `POST /v1/chat`
 - `GET /v1/audit`
 
+## Run with Docker
+
+Start API + Mongo + Redis:
+
+```bash
+docker compose up -d --build
+```
+
+Stop stack:
+
+```bash
+docker compose down
+```
+
 ## Enable pre-commit hook
 
 ```bash
@@ -41,3 +55,15 @@ npm run seed:api-keys
 ```
 
 This command prints plaintext keys once and stores only hashed keys in Mongo.
+
+If running via Docker Compose:
+
+```bash
+docker compose exec api node dist/scripts/seed-api-keys.js
+```
+
+Quick health check:
+
+```bash
+curl http://localhost:3000/healthz
+```

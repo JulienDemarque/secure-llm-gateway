@@ -257,3 +257,38 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - `npm run typecheck` passed
   - `npm test` passed (6 tests)
   - `npm run build` passed
+
+## 2026-05-21 - Iteration 20 (dockerization + db GUI research)
+
+- Re-checked assignment requirement to provide `Dockerfile` and `docker-compose.yml` for one-command startup of API + Mongo + Redis.
+- Added containerization files:
+  - `.dockerignore`
+  - `Dockerfile` (multi-stage build/runtime image)
+  - `docker-compose.yml` (api, mongo, redis, volumes, health checks)
+- Updated runtime health placeholder:
+  - `src/app.ts` now reports Redis as `not-ready` when `REDIS_URL` is configured (until live Redis ping middleware is added).
+- Added developer convenience scripts in `package.json`:
+  - `docker:up`
+  - `docker:down`
+- Updated `README.md`:
+  - added Docker startup/shutdown commands
+  - added compose seed command using compiled script (`node dist/scripts/seed-api-keys.js`)
+  - added health check command example
+- Fixed seed script deprecation warning:
+  - `src/scripts/seed-api-keys.ts` now uses `returnDocument: "after"` instead of deprecated `new`.
+- Validation:
+  - local checks passed (`npm run typecheck`, `npm test`, `npm run build`)
+  - `docker compose up -d --build` succeeded
+  - compose services healthy/running (`api`, `mongo`, `redis`)
+  - seeding against Docker Mongo succeeded
+  - `/healthz` returned Mongo ready
+- Research completed for GUI tools to inspect databases:
+  - MongoDB: MongoDB Compass (official), Studio 3T, NoSQLBooster
+  - Redis: RedisInsight (official), Another Redis Desktop Manager, Medis (macOS)
+
+## 2026-05-21 - Iteration 21 (mongo auth production note)
+
+- Updated `docs/productionalization-notes.md`:
+  - added explicit Mongo authentication hardening guidance for production (DB users/roles, least privilege, secret hygiene, network isolation).
+- Updated `docs/implementation-plan.md`:
+  - marked production Mongo authentication hardening documentation task complete.

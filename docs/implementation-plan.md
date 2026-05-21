@@ -65,6 +65,9 @@
 
 ### Phase 6: hardening and release readiness
 
+- [x] Add `Dockerfile` and `docker-compose.yml` for API + Mongo + Redis.
+- [x] Validate Docker startup and Mongo seeding flow end-to-end.
+- [x] Document production Mongo authentication hardening note.
 - [ ] Add secret scanning configuration and CI check.
 - [ ] Activate pre-commit hook in local git environment.
 - [ ] Add adversarial test variations and regression suite.

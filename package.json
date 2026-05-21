@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run src/app.auth.test.ts",
     "test:watch": "vitest src/app.auth.test.ts",
-    "seed:api-keys": "tsx src/scripts/seed-api-keys.ts"
+    "seed:api-keys": "tsx src/scripts/seed-api-keys.ts",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
   },
   "keywords": [],
   "author": "",
