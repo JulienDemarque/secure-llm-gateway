@@ -13,6 +13,7 @@
     "test:integration:redis": "ENABLE_REDIS_INTEGRATION_TESTS=1 vitest run src/app.rate-limit.redis.integration.test.ts",
     "seed:api-keys": "tsx src/scripts/seed-api-keys.ts",
     "docker:up": "docker compose up -d --build",
+    "docker:up:dev": "docker compose --profile dev up -d --build api-dev",
     "docker:down": "docker compose down"
   },
   "keywords": [],

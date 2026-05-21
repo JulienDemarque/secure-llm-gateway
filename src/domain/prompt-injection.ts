@@ -5,9 +5,26 @@ export type PromptMessage = {
 };
 
 /** Expected detector output shape for prompt-injection decisions. */
+export type PromptInjectionRuleId =
+  | "NONE"
+  | "INJ-A1"
+  | "INJ-A2"
+  | "INJ-A3"
+  | "INJ-B1"
+  | "INJ-B2"
+  | "INJ-B3"
+  | "INJ-C1"
+  | "INJ-C2"
+  | "INJ-C3"
+  | "INJ-E1"
+  | "INJ-E2"
+  | "INJ-E3"
+  | "INJ-UNKNOWN";
+
 export type PromptInjectionDetectionResult = {
   blocked: boolean;
-  category: "instruction_override" | "data_exfiltration" | "policy_evasion" | "unknown";
+  ruleId: PromptInjectionRuleId;
+  owaspCategory: "LLM01" | "LLM02" | "LLM06" | "NONE" | "UNKNOWN";
   confidence: number;
   rationale: string;
 };

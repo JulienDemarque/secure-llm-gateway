@@ -52,6 +52,7 @@
 - [x] Add minimal OpenAPI/Swagger docs for manual endpoint validation.
 - [x] Improve Swagger default `/v1/chat` payload example for realistic manual testing.
 - [x] Extend `/healthz` dependency reporting with Ollama detector readiness.
+- [x] Add prompt-guard debug logging path for detector decision troubleshooting.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.
@@ -61,6 +62,10 @@
 - [x] Create detection approach comparison document.
 - [x] Validate Ollama JS SDK + local classifier integration constraints.
 - [x] Enforce structured detector output schema (Ollama `format` JSON schema + runtime validation).
+- [x] Include canonical `ruleId`/`owaspCategory` in detector output for "rule that fired" auditability.
+- [x] Enforce decision coherence (`blocked=false` only when no injection signal; fail-safe block on contradictions).
+- [x] Simplify detector output: LLM returns `ruleId` only; service derives OWASP category in code.
+- [x] Improve detector prompt with per-rule descriptors + disambiguation guidance to reduce overuse of `INJ-A1`.
 - [ ] Define detector timeout/fallback policy and audit semantics.
 - [ ] Define benchmark plan (latency, false positives, false negatives).
 
@@ -79,6 +84,7 @@
 
 - [x] Add `Dockerfile` and `docker-compose.yml` for API + Mongo + Redis.
 - [x] Add internal-only Docker Compose Ollama service for local prompt guard runtime.
+- [x] Add Docker Compose hot-reload API dev service (`api-dev` with `tsx watch`).
 - [x] Validate Docker startup and Mongo seeding flow end-to-end.
 - [x] Document production Mongo authentication hardening note.
 - [ ] Add secret scanning configuration and CI check.

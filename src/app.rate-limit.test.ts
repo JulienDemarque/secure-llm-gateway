@@ -60,7 +60,8 @@ class AllowPromptInjectionDetector implements PromptInjectionDetector {
   async detect(_messages: PromptMessage[]): Promise<PromptInjectionDetectionResult> {
     return {
       blocked: false,
-      category: "unknown",
+      ruleId: "NONE",
+      owaspCategory: "NONE",
       confidence: 0,
       rationale: "allow"
     };

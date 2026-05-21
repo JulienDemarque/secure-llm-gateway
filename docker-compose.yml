@@ -24,6 +24,38 @@ services:
       ollama:
         condition: service_healthy
 
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    container_name: secure-llm-gateway-api-dev
+    command: npm run dev
+    profiles: ["dev"]
+    environment:
+      PORT: "3000"
+      MONGODB_URI: "mongodb://mongo:27017/secure_llm_gateway"
+      REDIS_URL: "redis://redis:6379"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OLLAMA_HOST: "${OLLAMA_HOST:-http://ollama:11434}"
+      PROMPT_GUARD_MODEL: "${PROMPT_GUARD_MODEL:-llama3.1:8b}"
+      PROMPT_GUARD_DEBUG: "${PROMPT_GUARD_DEBUG:-}"
+      PII_ENCRYPTION_KEY_ID: "${PII_ENCRYPTION_KEY_ID:-pii-key-v1}"
+      PII_ENCRYPTION_KEY_B64: "${PII_ENCRYPTION_KEY_B64:-}"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - api_dev_node_modules:/app/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
   mongo:
     image: mongo:7
     container_name: secure-llm-gateway-mongo
@@ -65,6 +97,7 @@ services:
       retries: 12
 
 volumes:
+  api_dev_node_modules:
   mongo_data:
   redis_data:
   ollama_data:

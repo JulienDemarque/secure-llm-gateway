@@ -47,7 +47,8 @@ class FakePromptInjectionDetector implements PromptInjectionDetector {
     private readonly mode: "allow" | "block" | "error",
     private readonly result: PromptInjectionDetectionResult = {
       blocked: false,
-      category: "unknown",
+      ruleId: "NONE",
+      owaspCategory: "NONE",
       confidence: 0,
       rationale: "allow"
     }
@@ -62,7 +63,8 @@ class FakePromptInjectionDetector implements PromptInjectionDetector {
     }
     return {
       blocked: false,
-      category: "unknown",
+      ruleId: "NONE",
+      owaspCategory: "NONE",
       confidence: 0,
       rationale: "allow"
     };
@@ -113,7 +115,8 @@ describe("prompt-injection guard middleware", () => {
     const { app, llmClient, clientRaw } = makeApp(
       new FakePromptInjectionDetector("block", {
         blocked: true,
-        category: "instruction_override",
+        ruleId: "INJ-C2",
+        owaspCategory: "LLM01",
         confidence: 0.93,
         rationale: "attempt to override system instructions"
       })
@@ -128,7 +131,8 @@ describe("prompt-injection guard middleware", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("prompt-injection-detected");
-    expect(response.body.category).toBe("instruction_override");
+    expect(response.body.ruleId).toBe("INJ-C2");
+    expect(response.body.owaspCategory).toBe("LLM01");
     expect(llmClient.called).toBe(0);
   });
 

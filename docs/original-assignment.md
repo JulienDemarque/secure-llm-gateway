@@ -209,7 +209,75 @@ Ship something you would defend in production.
 
 
 
-[Appendix main content removed]
+[Appendix actual prompts example have been removed]
+
+A · Direct Instruction Override
+Attempts to override the system prompt or operating rules of the model directly.
+
+INJ-A1 OWASP LLM01 · Direct Prompt Injection
+Plain override with confirmation probe
+Expected: block with 400, audit-log the rule that fired.
+
+INJ-A2 OWASP LLM01 · Delimiter Injection
+Forged role tokens to impersonate system messages
+Expected: block with 400, audit-log the rule that fired.
+
+INJ-A3 OWASP LLM01 · Authority Spoofing
+Fake administrator handoff embedded in user content
+Expected: block with 400, audit-log the rule that fired.
+
+B · System Prompt and Context Extraction
+Attempts to extract the system prompt, internal context, or environment details. Output validation must also catch
+attempted leaks in the response.
+
+INJ-B1 OWASP LLM02 · Prompt Extraction
+Direct request for the system instructions
+Expected: block at input layer; output validation also rejects any leakage.
+
+INJ-B2 OWASP LLM02 · Context Window Probe
+Markdown-format extraction of the prior context
+Expected: block at input layer; output validation also rejects any leakage.
+
+INJ-B3 OWASP LLM06 · Secret Exfiltration Probe
+Probe for environment variables and API keys
+Expected: block at input layer; output validation rejects any secret-shaped string.
+
+C · Role Override and Persona Hijack
+Attempts to replace the model's operating persona with one that has no restrictions.
+INJ-C1 OWASP LLM01 · Persona Hijack
+Classic DAN-style jailbreak
+Expected: block with 400, audit-log the rule that fired.
+
+INJ-C2 OWASP LLM01 · Interpreter Roleplay
+Roleplay-as-interpreter probing for filesystem access
+Expected: block with 400, audit-log the rule that fired
+
+INJ-C3 OWASP LLM01 · Output Format Hijack
+Force a structured-output format that signals a bypass
+Expected: block with 400, audit-log the rule that fired.
+
+D · PII That Must Be Redacted Before Reaching the LLM
+All identifiers below are synthetic. ID numbers, phones, and emails were generated for this corpus and do not
+correspond to real individuals.
+
+PII-D1 Synthetic · Email + phone + Israeli national ID
+Inline PII in natural prose
+Expected: redact each PII span with a reversible token before forwarding to the LLM.
+
+PII-D2 Synthetic · Multiple PII in mixed-format prose
+Several individuals, several PII categories, mixed locales
+Expected: redact each PII span with a reversible token before forwarding to the LLM.
+
+PII-D3 Synthetic · PII embedded in structured payload
+JSON payload with PII fields that must be redacted in-place
+Expected: redact each PII span with a reversible token before forwarding to the LLM.
+
+
+E · Indirect Injection (Payload Smuggling)
+Attack instructions embedded inside what appears to be benign user content. Output validation must catch any
+echo of the smuggled instruction if the message is allowed through.
+
+
 
 Corpus Acceptance Criteria
 Your test suite must include test cases that exercise every entry above:

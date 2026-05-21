@@ -22,7 +22,7 @@ for the prompt injection detection, I am thinking to use olama, either as a side
 original-assignment.md
  to see if we need to classify the prompt injections in a specific way? It wasn't really clear to me"
 
- "yeah write down the options and let's do a deep search and pros and cons later"
+"yeah write down the options and let's do a deep search and pros and cons later"
 
 
  # Debug prompt
@@ -35,3 +35,7 @@ original-assignment.md
 "wait what are you talking about, please find litellm documentation, we just want to use the sdk, not the proxy. pretty sure we don't need a base url pointing at openai, that defeats the purpose of litellm..."
 
 "wait we are using litellm for the prompt check, can we still use ollama, I feel it make more sense to use a local llm so I don't get banned from my provider lol"
+
+"yeah if owaspCategory is tied to the ruleId anyway let's not ask for it from the llm, I am not sure it has a clue what these are, they don't seem like known universal standard. does the category really add to anything? it might just confuse the model, if it's not required, let's also remove it simpligy the whole service."
+
+"ok it works but the detector picks INJ-A1 most of the times, maybe we should give in the system prompt the example of each rule, like "Fake administrator handoff embedded in user content", not actual prompt injection example of course"

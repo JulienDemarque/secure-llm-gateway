@@ -556,3 +556,91 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - applied this fallback logic to both `PROMPT_GUARD_MODEL` and `OLLAMA_HOST`.
 - Updated `docker-compose.yml`:
   - changed default API env passthrough for `PROMPT_GUARD_MODEL` to `llama3.1:8b` instead of empty string.
+
+## 2026-05-21 - Iteration 38 (detector emits explicit "rule that fired")
+
+- Updated prompt-injection detector contract in `src/domain/prompt-injection.ts`:
+  - added canonical `ruleId` field (`INJ-*`, `INJ-UNKNOWN`, `NONE`).
+  - added `owaspCategory` field (`LLM01`, `LLM02`, `LLM06`, `NONE`, `UNKNOWN`).
+- Updated `src/detectors/generic-llm-prompt-injection-detector.ts`:
+  - expanded Ollama structured `format` schema to require `ruleId` and `owaspCategory`.
+  - expanded runtime `zod` validation to enforce these fields.
+  - updated classification prompt to map detections to the provided corpus rules (`INJ-A1`..`INJ-E3`) and OWASP categories.
+- Updated `src/middleware/detect-prompt-injection.ts`:
+  - block responses now include `ruleId` and `owaspCategory` to expose the fired rule in API behavior.
+- Updated tests:
+  - refreshed detector stubs in auth/rate-limit suites to include new required fields.
+  - updated prompt-injection tests to assert `ruleId` and `owaspCategory` in blocked responses.
+- Updated `docs/implementation-plan.md`:
+  - marked detector rule-id/OWASP tagging milestone complete.
+
+## 2026-05-22 - Iteration 39 (prompt guard debug visibility + API-only logs)
+
+- Added detector decision debug logging in `src/middleware/detect-prompt-injection.ts`:
+  - new `PROMPT_GUARD_DEBUG=1` mode logs detector decisions (`blocked`, `ruleId`, `owaspCategory`, `category`, `confidence`, `rationale`).
+  - detector runtime errors are also logged in debug mode.
+- Updated `README.md`:
+  - documented `PROMPT_GUARD_DEBUG`.
+  - added API-only Docker logs command: `docker compose logs -f --tail=200 api`.
+- Updated `docs/implementation-plan.md`:
+  - marked prompt-guard troubleshooting/logging support as complete.
+
+## 2026-05-22 - Iteration 40 (Docker hot-reload API service)
+
+- Added `api-dev` service in `docker-compose.yml` for containerized hot reload:
+  - build target: `Dockerfile` `build` stage (includes dev dependencies).
+  - runtime command: `npm run dev` (`tsx watch`).
+  - bind mounts project source plus dedicated `api_dev_node_modules` volume.
+  - profile-gated (`dev`) to avoid interfering with default `api` service.
+  - wired same env and dependency health conditions as `api`.
+- Added `docker:up:dev` script in `package.json`:
+  - `docker compose --profile dev up -d --build api-dev`
+- Updated `README.md`:
+  - documented hot-reload Docker startup command.
+  - documented `api-dev` logs command for dev mode.
+- Updated `docs/implementation-plan.md`:
+  - marked Docker Compose hot-reload dev service task complete.
+
+## 2026-05-22 - Iteration 41 (detector decision coherence hardening)
+
+- Tightened prompt-injection detector consistency in `src/detectors/generic-llm-prompt-injection-detector.ts`:
+  - expanded structured JSON schema with coherence constraints for `blocked=false` outputs.
+  - expanded runtime `zod` validation with cross-field checks:
+    - when `blocked=false`, require `ruleId=NONE`, `owaspCategory=NONE`, `category=unknown`, `confidence=0`.
+  - strengthened system prompt to explicitly require:
+    - any recognized injection signal => `blocked=true`
+    - nearest corpus `ruleId` selection (`INJ-A1..INJ-E3`, fallback `INJ-UNKNOWN`).
+- Added fail-safe normalization:
+  - if model returns contradictory output (`blocked=false` with injection signals), code coerces it to a blocking decision before final validation.
+- Updated `docs/implementation-plan.md`:
+  - marked detector decision coherence hardening task complete.
+
+## 2026-05-22 - Iteration 42 (ruleId-only detector output simplification)
+
+- Simplified prompt-injection detector contract to reduce model confusion:
+  - removed `category` from `PromptInjectionDetectionResult`.
+  - detector now treats `ruleId` as the primary model classification signal.
+- Updated `src/detectors/generic-llm-prompt-injection-detector.ts`:
+  - removed `owaspCategory` and `category` from model-required JSON schema.
+  - prompt now requests nearest `ruleId` only (plus `blocked`, `confidence`, `rationale`).
+  - OWASP category is now derived deterministically in code from `ruleId`.
+  - kept fail-safe normalization for contradictory outputs.
+- Updated `src/middleware/detect-prompt-injection.ts`:
+  - removed `category` from debug logs and 400 block response payload.
+- Updated tests:
+  - removed `category` from detector stubs and assertions in:
+    - `src/app.auth.test.ts`
+    - `src/app.rate-limit.test.ts`
+    - `src/app.rate-limit.redis.integration.test.ts`
+    - `src/app.prompt-injection.test.ts`
+- Updated `docs/implementation-plan.md`:
+  - marked ruleId-only detector output simplification complete.
+
+## 2026-05-22 - Iteration 43 (rule disambiguation prompt tuning)
+
+- Updated `src/detectors/generic-llm-prompt-injection-detector.ts` prompt content to improve rule selection quality:
+  - added concise, non-payload descriptors for each `INJ-*` rule.
+  - added disambiguation priority guidance to reduce defaulting to `INJ-A1`.
+  - explicitly instructs classifier to prefer the most specific matching rule and use `INJ-UNKNOWN` only when no confident mapping exists.
+- Updated `docs/implementation-plan.md`:
+  - marked detector disambiguation prompt refinement complete.

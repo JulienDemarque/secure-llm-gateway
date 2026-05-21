@@ -42,6 +42,7 @@ Prompt-injection detection uses a local Ollama model by default.
 
 - `OLLAMA_HOST` (optional, default `http://127.0.0.1:11434` outside Docker, `http://ollama:11434` in Docker Compose)
 - `PROMPT_GUARD_MODEL` (optional, default `llama3.1:8b`)
+- `PROMPT_GUARD_DEBUG` (optional, set to `1` to log detector decisions/errors in API logs)
 
 If API runs in Docker and Ollama runs on host machine (macOS), set:
 
@@ -53,6 +54,25 @@ Start API + Mongo + Redis + Ollama:
 
 ```bash
 docker compose up -d --build
+```
+
+Start hot-reload API (development mode inside Docker):
+
+```bash
+docker compose --profile dev up -d --build api-dev
+```
+
+or:
+
+```bash
+npm run docker:up:dev
+```
+
+This runs `tsx watch` in the container and reloads on source changes.
+Use `api-dev` logs when in dev mode:
+
+```bash
+docker compose logs -f --tail=200 api-dev
 ```
 
 Pull the prompt-guard model inside Compose network:
@@ -118,4 +138,10 @@ Swagger UI for manual testing:
 
 ```bash
 open http://localhost:3000/docs
+```
+
+Tail API logs only (exclude Mongo/Redis noise):
+
+```bash
+docker compose logs -f --tail=200 api
 ```
