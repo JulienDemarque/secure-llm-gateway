@@ -8,6 +8,7 @@ alwaysApply: true
 - Ship work in small, cohesive steps.
 - Keep `docs/original-assignment.md` in active context during planning and implementation to avoid requirement drift.
 - Keep docs concise and load only the minimum active set needed for the current iteration.
+- Before implementing, check official documentation and best-practice guidance relevant to the change (for example Node.js/Express docs for API work).
 - End each step with:
   - change summary
   - rationale

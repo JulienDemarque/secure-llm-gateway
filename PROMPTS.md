@@ -1,6 +1,6 @@
 
 
-First Prompt:
+# First Prompt:
 "Your role is to format and reword prompts so they are concie and clear. Do not edit any files. I will give you prompts intended as instructions for another cursor agent, check the prompt, give suggestion, organize the prompt so they are more readable. Answer me in the chat only.
 Here is the first prompt:
 'In the docs folder you will found the original-assignement.md file. It's a safe to read version of the original assigment. 
@@ -12,3 +12,8 @@ Here is a high level plan:
 - top of the todo list will be to do web research for existing tools and best practices on using the tools, repo architecture, testing, security and more. Document each topic in the architecture doc, include links to official docs, propose different approach and suggest the best fit.
 for the prompt injection detection, I am thinking to use olama, either as a sidecar or with the js sdk and a local classifier (TBD which one).'
 "
+
+
+# Example prompts:
+
+"ok cool, actually I forgot to ask you to check node express doc and to follow their documentation, can you add it as a rule in cursor rules, that for any implementation, we want to search official doc, or do research on best practices."

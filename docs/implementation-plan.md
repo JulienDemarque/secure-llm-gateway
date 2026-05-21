@@ -36,6 +36,7 @@
 ### Phase 3: architecture baseline
 
 - [x] Create technical architecture outline document.
+- [x] Bootstrap minimal Node.js API placeholder with required routes.
 - [ ] Define request pipeline contract for `/v1/chat`.
 - [ ] Freeze middleware boundaries and shared audit context contract.
 - [ ] Define test strategy per control module and acceptance criteria.

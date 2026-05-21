@@ -105,3 +105,41 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - added concise-docs/minimal-context rule.
 - Updated `docs/README.md`:
   - indexed productionalization and context-budget docs.
+
+## 2026-05-21 - Iteration 8 (Node.js API placeholder scaffold)
+
+- Re-validated assignment functional requirements before coding:
+  - required endpoints and request shape
+  - `strict: true` TypeScript requirement
+  - `/v1/chat` returns clear `503` when provider key is missing.
+- Initialized Node/TypeScript API scaffold:
+  - added `package.json` scripts for dev/build/start/typecheck
+  - installed `express`, `typescript`, `tsx`, and type dependencies
+  - added `tsconfig.json` with `strict: true`
+  - added `src/server.ts` and `src/app.ts`
+- Implemented placeholder endpoints:
+  - `GET /healthz` returns dependency readiness placeholders and provider readiness
+  - `POST /v1/chat` validates shape/header, returns `503` if no provider key, `501` otherwise
+  - `GET /v1/audit` returns `501` placeholder
+- Added concise root `README.md` with quick start and route list.
+- Updated `docs/implementation-plan.md`:
+  - marked Node.js placeholder route bootstrap complete.
+
+## 2026-05-21 - Iteration 9 (official-doc research rule)
+
+- Updated `.cursor/rules/safe-iteration-loop.mdc`:
+  - added a rule to check official documentation and best-practice guidance before implementation work.
+  - included Node.js/Express as explicit example for API-related changes.
+
+## 2026-05-21 - Iteration 10 (Express/Node doc-aligned hardening)
+
+- Updated `src/app.ts`:
+  - made JSON parser limit explicit with `express.json({ limit: "100kb" })`.
+  - added malformed JSON handler returning `400` with `invalid-json` error payload.
+- Updated `src/server.ts`:
+  - hardened `PORT` parsing with safe integer parsing and fallback to `3000`.
+
+## 2026-05-21 - Iteration 11 (.env loading fix)
+
+- Added `dotenv` dependency and loaded it in `src/server.ts` with `import "dotenv/config";`.
+- Result: environment variables from root `.env` are now available to `hasProviderKey()` at runtime.
