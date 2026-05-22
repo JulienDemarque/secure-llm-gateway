@@ -770,3 +770,41 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Validation:
   - `npm run typecheck` passed.
   - `npm test -- src/app.audit.test.ts src/app.pii.test.ts` passed (full configured test suite executed and passed).
+
+## 2026-05-22 - Iteration 50 (outbound output validation middleware + tests)
+
+- Implemented outbound output validation control:
+  - added `src/middleware/validate-outbound-output.ts` as dedicated middleware for provider response checks.
+  - blocks secret-shaped leak patterns in outbound content:
+    - OpenAI-style keys (`sk-...`)
+    - JWT-shaped strings
+    - AWS access key IDs (`AKIA...`)
+  - blocks injection echo responses when suspicious instruction patterns are present in both request and outbound response.
+  - redacts outbound PII categories (email, phone, Israeli national ID) from assistant content before returning response.
+- Wired output validation into `/v1/chat` route flow in `src/app.ts`:
+  - provider response is stored in route locals.
+  - output validation runs before final response serialization.
+  - blocked outbound responses return `400` with `output-validation-failed`.
+- Added unit/integration-style route tests:
+  - new `src/app.output-validation.test.ts` covering:
+    - secret-pattern blocking (OpenAI key, JWT, AWS key)
+    - injection-echo blocking
+    - outbound PII redaction behavior.
+- Updated API/docs and checklist tracking:
+  - `src/docs/openapi.ts`: `400` description now includes outbound output-validation blocks.
+  - `README.md`: current controls section now documents outbound output validation.
+  - `docs/implementation-plan.md`: marked output validation module/tests as complete.
+
+## 2026-05-22 - Iteration 51 (GitHub Actions CI for push/PR validation)
+
+- Added CI workflow:
+  - created `.github/workflows/ci.yml`.
+  - workflow runs on both `push` and `pull_request`.
+  - CI steps now execute:
+    - dependency install (`npm ci`)
+    - gitleaks scan (`gitleaks detect --config .gitleaks.toml --source . --no-git`)
+    - TypeScript typecheck (`npm run typecheck`)
+    - test suite (`npm test`)
+- Updated docs:
+  - `README.md`: added CI section describing automated checks and workflow path.
+  - `docs/implementation-plan.md`: marked "Add secret scanning configuration and CI check" as completed.

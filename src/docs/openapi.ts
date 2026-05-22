@@ -93,7 +93,7 @@ export const openApiDocument = {
           "500": { description: "PII redaction failed or unavailable" },
           "503": { description: "Provider missing key/not ready" },
           "401": { description: "Missing or invalid API key" },
-          "400": { description: "Invalid payload or prompt-injection detection block" },
+          "400": { description: "Invalid payload, prompt-injection block, or outbound output-validation block" },
           "429": { description: "Rate limit exceeded" }
         }
       }

@@ -11,6 +11,14 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Run Redis integration tests: `npm run test:integration:redis`
 - Build: `npm run build`
 
+## CI
+
+GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pull request:
+
+- gitleaks secret scan (`.gitleaks.toml`)
+- TypeScript typecheck
+- Unit test suite
+
 ## Placeholder endpoints
 
 - `GET /healthz`
@@ -28,6 +36,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Model-assisted prompt-injection guard on `/v1/chat` using structured JSON detector output.
 - Mongo audit logging for every `/v1/chat` request (`allowed` / `blocked` / `error`) with request/response hashes.
 - Deterministic inbound PII redaction (email, phone, Israeli ID) with reversible token persistence.
+- Outbound output validation blocks secret-shaped leaks (`sk-*`, JWT, AWS access key) and injection-echo responses; outbound PII is redacted before returning to client.
 - `correlationId` is stored in both `audit_logs` and `redaction_tokens` for deterministic linkage.
 
 ## Provider configuration (LiteLLM SDK path)

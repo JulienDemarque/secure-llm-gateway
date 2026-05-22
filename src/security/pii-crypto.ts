@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
+// IV = Initialization Vector (also called a nonce in GCM contexts).
 const IV_LENGTH = 12;
 const KEY_LENGTH = 32;
 

@@ -80,7 +80,7 @@
 - [x] Add initial model-assisted prompt-injection guard middleware with structured JSON detector output.
 - [x] Implement prompt-injection detection module and tests.
 - [x] Implement deterministic PII redaction module and tests (email, phone, Israeli ID + reversible token storage).
-- [ ] Implement output validation module and tests.
+- [x] Implement output validation module and tests.
 - [x] Implement audit logging and retrieval path.
 - [x] Add admin audit-time original request reconstruction (`includeOriginal=true`) from encrypted redaction tokens.
 
@@ -91,7 +91,7 @@
 - [x] Add Docker Compose hot-reload API dev service (`api-dev` with `tsx watch`).
 - [x] Validate Docker startup and Mongo seeding flow end-to-end.
 - [x] Document production Mongo authentication hardening note.
-- [ ] Add secret scanning configuration and CI check.
+- [x] Add secret scanning configuration and CI check.
 - [x] Add TypeScript typecheck to pre-commit hook checks.
 - [ ] Activate pre-commit hook in local git environment.
 - [ ] Add adversarial test variations and regression suite.

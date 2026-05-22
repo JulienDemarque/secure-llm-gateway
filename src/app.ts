@@ -17,6 +17,7 @@ import { detectPromptInjection } from "./middleware/detect-prompt-injection.js";
 import { redactInboundPii } from "./middleware/redact-inbound-pii.js";
 import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
+import { validateOutboundOutput } from "./middleware/validate-outbound-output.js";
 import { LiteLlmClient } from "./providers/litellm-client.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
 import { MongoAuditLogRepository } from "./repositories/mongo-audit-log-repository.js";
@@ -143,6 +144,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const enforceRateLimit = rateLimitPerApiKey(rateLimitStore);
   const enforcePromptInjectionGuard = detectPromptInjection(promptInjectionDetector);
   const enforcePiiRedaction = redactInboundPii(redactionTokenRepository);
+  const enforceOutputValidation = validateOutboundOutput();
   app.use(express.json({ limit: "100kb" }));
   app.get("/openapi.json", (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
@@ -229,7 +231,7 @@ export function createApp(options: CreateAppOptions = {}) {
     enforceRateLimit,
     enforcePromptInjectionGuard,
     enforcePiiRedaction,
-    async (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
+    async (req: Request<unknown, unknown, ChatRequestBody>, res: Response, next: NextFunction) => {
       if (!validateChatRequest(req, res)) {
         return;
       }
@@ -247,13 +249,18 @@ export function createApp(options: CreateAppOptions = {}) {
           messages: req.body.messages ?? [],
           maxTokens: req.body.max_tokens
         });
-        return res.status(200).json(completion);
+        (res.locals as { providerCompletion?: unknown }).providerCompletion = completion;
+        return next();
       } catch (error: unknown) {
         return res.status(502).json({
           error: "provider-request-failed",
           message: error instanceof Error ? error.message : "Failed to call LiteLLM provider"
         });
       }
+    },
+    enforceOutputValidation,
+    (_req: Request, res: Response) => {
+      return res.status(200).json((res.locals as { providerCompletion?: unknown }).providerCompletion ?? null);
     }
   );
 
