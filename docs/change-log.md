@@ -830,3 +830,11 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Validation:
   - `npm run typecheck` passed.
   - `npm test` passed.
+
+## 2026-05-22 - Iteration 53 (CI gitleaks command-not-found fix)
+
+- Fixed GitHub Actions failure `gitleaks: command not found` in `.github/workflows/ci.yml`.
+- Replaced manual gitleaks install + PATH mutation with a Dockerized scan step:
+  - now runs `zricethezav/gitleaks:latest` directly against the workspace.
+  - preserves existing scan semantics (`--config .gitleaks.toml --source . --no-git`).
+- Result: CI no longer depends on runner PATH propagation for gitleaks binary discovery.
