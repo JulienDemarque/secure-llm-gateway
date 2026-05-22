@@ -93,6 +93,7 @@
 - [x] Document production Mongo authentication hardening note.
 - [x] Add secret scanning configuration and CI check.
 - [x] Add TypeScript typecheck to pre-commit hook checks.
+- [x] Add structured JSON logging with per-request correlation ID.
 - [ ] Activate pre-commit hook in local git environment.
 - [ ] Add adversarial test variations and regression suite.
 - [ ] Document known limitations and operational runbook.

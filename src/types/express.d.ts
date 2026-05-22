@@ -1,5 +1,6 @@
 import type { AuthContext } from "../domain/auth.js";
 import type { PromptInjectionDetectionResult } from "../domain/prompt-injection.js";
+import type { Logger } from "pino";
 
 /** Extends Express request typing so middleware can share auth context safely. */
 declare global {
@@ -8,6 +9,7 @@ declare global {
       authContext?: AuthContext;
       promptDetectionResult?: PromptInjectionDetectionResult;
       correlationId?: string;
+      log?: Logger;
     }
   }
 }

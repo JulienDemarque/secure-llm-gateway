@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { PromptInjectionDetector, PromptMessage } from "../domain/prompt-injection.js";
+import { logger } from "../observability/logger.js";
 
 type ChatBody = {
   messages?: Array<{ role?: string; content?: string }>;
@@ -27,17 +28,16 @@ export function detectPromptInjection(detector: PromptInjectionDetector) {
 
       const result = await detector.detect(inputMessages);
       req.promptDetectionResult = result;
+      const requestLogger = req.log ?? logger;
       if (isPromptGuardDebugEnabled()) {
-        console.log(
-          JSON.stringify({
-            event: "prompt-guard-decision",
-            blocked: result.blocked,
-            ruleId: result.ruleId,
-            owaspCategory: result.owaspCategory,
-            confidence: result.confidence,
-            rationale: result.rationale
-          })
-        );
+        requestLogger.info({
+          event: "prompt-guard-decision",
+          blocked: result.blocked,
+          ruleId: result.ruleId,
+          owaspCategory: result.owaspCategory,
+          confidence: result.confidence,
+          rationale: result.rationale
+        });
       }
       if (result.blocked) {
         return res.status(400).json({
@@ -51,13 +51,12 @@ export function detectPromptInjection(detector: PromptInjectionDetector) {
 
       return next();
     } catch (error: unknown) {
+      const requestLogger = req.log ?? logger;
       if (isPromptGuardDebugEnabled()) {
-        console.log(
-          JSON.stringify({
-            event: "prompt-guard-error",
-            message: error instanceof Error ? error.message : "Prompt-injection detector failed"
-          })
-        );
+        requestLogger.error({
+          event: "prompt-guard-error",
+          message: error instanceof Error ? error.message : "Prompt-injection detector failed"
+        });
       }
       return res.status(502).json({
         error: "detector-failed",

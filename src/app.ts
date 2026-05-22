@@ -18,6 +18,7 @@ import { redactInboundPii } from "./middleware/redact-inbound-pii.js";
 import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
 import { validateOutboundOutput } from "./middleware/validate-outbound-output.js";
+import { logger } from "./observability/logger.js";
 import { LiteLlmClient } from "./providers/litellm-client.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
 import { MongoAuditLogRepository } from "./repositories/mongo-audit-log-repository.js";
@@ -129,6 +130,18 @@ function validateChatRequest(req: Request<unknown, unknown, ChatRequestBody>, re
   return true;
 }
 
+/** Ensures a stable per-request correlation identifier for structured logging. */
+function resolveCorrelationId(req: Request): string {
+  const headerValue = req.header("x-correlation-id");
+  if (typeof headerValue === "string") {
+    const trimmed = headerValue.trim();
+    if (trimmed.length > 0 && trimmed.length <= 128) {
+      return trimmed;
+    }
+  }
+  return randomUUID();
+}
+
 /** Builds the Express app with baseline routes and security middleware chain. */
 export function createApp(options: CreateAppOptions = {}) {
   const app = express();
@@ -146,6 +159,30 @@ export function createApp(options: CreateAppOptions = {}) {
   const enforcePiiRedaction = redactInboundPii(redactionTokenRepository);
   const enforceOutputValidation = validateOutboundOutput();
   app.use(express.json({ limit: "100kb" }));
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const correlationId = resolveCorrelationId(req);
+    req.correlationId = correlationId;
+    res.setHeader("x-correlation-id", correlationId);
+
+    const requestStartedAt = Date.now();
+    const requestLogger = logger.child({
+      correlationId,
+      method: req.method,
+      path: req.path
+    });
+    req.log = requestLogger;
+    requestLogger.info({ event: "request-started" });
+
+    res.on("finish", () => {
+      requestLogger.info({
+        event: "request-completed",
+        statusCode: res.statusCode,
+        latencyMs: Date.now() - requestStartedAt
+      });
+    });
+    return next();
+  });
+
   app.get("/openapi.json", (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
   });
@@ -153,7 +190,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.use("/v1/chat", (req: Request, res: Response, next: NextFunction) => {
     const startedAt = Date.now();
-    const correlationId = randomUUID();
+    const correlationId = req.correlationId ?? randomUUID();
     req.correlationId = correlationId;
     const requestHash = hashForAudit(req.body ?? null);
     let responseBody: unknown = null;
@@ -205,7 +242,7 @@ export function createApp(options: CreateAppOptions = {}) {
           detectedThreats
         })
         .catch((error: unknown) => {
-          console.error("audit-log-write-failed", error);
+          (req.log ?? logger).error({ event: "audit-log-write-failed", error });
         });
     });
 
@@ -327,7 +364,11 @@ export function createApp(options: CreateAppOptions = {}) {
           })
         );
       } catch (error: unknown) {
-        console.error("audit-redaction-token-decrypt-failed", { correlationId: record.correlationId, error });
+        (req.log ?? logger).error({
+          event: "audit-redaction-token-decrypt-failed",
+          correlationId: record.correlationId,
+          error
+        });
       }
     }
 

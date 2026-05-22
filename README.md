@@ -37,6 +37,7 @@ GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pul
 - Mongo audit logging for every `/v1/chat` request (`allowed` / `blocked` / `error`) with request/response hashes.
 - Deterministic inbound PII redaction (email, phone, Israeli ID) with reversible token persistence.
 - Outbound output validation blocks secret-shaped leaks (`sk-*`, JWT, AWS access key) and injection-echo responses; outbound PII is redacted before returning to client.
+- Structured JSON logging via `pino` with per-request `correlationId` (request start/end + latency + status).
 - `correlationId` is stored in both `audit_logs` and `redaction_tokens` for deterministic linkage.
 
 ## Provider configuration (LiteLLM SDK path)
@@ -55,6 +56,7 @@ Prompt-injection detection uses a local Ollama model by default.
 - `OLLAMA_HOST` (optional, default `http://127.0.0.1:11434` outside Docker, `http://ollama:11434` in Docker Compose)
 - `PROMPT_GUARD_MODEL` (optional, default `llama3.1:8b`)
 - `PROMPT_GUARD_DEBUG` (optional, set to `1` to log detector decisions/errors in API logs)
+- `LOG_LEVEL` (optional, default `info`)
 
 If API runs in Docker and Ollama runs on host machine (macOS), set:
 

@@ -808,3 +808,25 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Updated docs:
   - `README.md`: added CI section describing automated checks and workflow path.
   - `docs/implementation-plan.md`: marked "Add secret scanning configuration and CI check" as completed.
+
+## 2026-05-22 - Iteration 52 (structured logging with request correlation IDs)
+
+- Added structured logging foundation:
+  - installed `pino` dependency.
+  - created `src/observability/logger.ts` with base logger and env-driven `LOG_LEVEL`.
+- Added per-request correlation ID middleware in `src/app.ts`:
+  - uses incoming `x-correlation-id` when present (validated), otherwise generates UUID.
+  - attaches `correlationId` to request context and echoes it in response headers.
+  - emits structured `request-started` / `request-completed` logs with method, path, status, and latency.
+- Replaced ad-hoc app/server logging with structured logger:
+  - `src/server.ts`: startup log now emitted via `pino`.
+  - `src/app.ts`: audit write/decrypt failure paths now log structured error events (with correlation context).
+  - `src/middleware/detect-prompt-injection.ts`: debug/error events now use request-scoped structured logger.
+- Extended Express request typing:
+  - `src/types/express.d.ts`: added optional `Request.log` (`pino` logger instance) for middleware-level structured logging.
+- Updated docs and checklist tracking:
+  - `README.md`: documented structured logging control and `LOG_LEVEL`.
+  - `docs/implementation-plan.md`: marked structured logging task complete.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test` passed.
