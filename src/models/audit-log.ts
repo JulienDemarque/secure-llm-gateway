@@ -4,6 +4,7 @@ import type { PromptInjectionDetectionResult } from "../domain/prompt-injection.
 
 type AuditLogDocument = {
   timestamp: Date;
+  correlationId: string;
   apiKeyId: string | null;
   model: string | null;
   requestHash: string;
@@ -21,6 +22,7 @@ type AuditLogDocument = {
 const auditLogSchema = new Schema<AuditLogDocument>(
   {
     timestamp: { type: Date, required: true, index: true },
+    correlationId: { type: String, required: true, index: true },
     apiKeyId: { type: String, required: false, default: null, index: true },
     model: { type: String, required: false, default: null },
     requestHash: { type: String, required: true },

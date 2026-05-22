@@ -7,6 +7,7 @@ declare global {
     interface Request {
       authContext?: AuthContext;
       promptDetectionResult?: PromptInjectionDetectionResult;
+      correlationId?: string;
     }
   }
 }

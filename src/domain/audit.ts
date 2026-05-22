@@ -15,6 +15,7 @@ export type DetectedThreat = {
 export type AuditLogRecord = {
   id: string;
   timestamp: Date;
+  correlationId: string;
   apiKeyId: string | null;
   model: string | null;
   requestHash: string;

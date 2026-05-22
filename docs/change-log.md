@@ -671,3 +671,74 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - `README.md` now includes audit logging behavior and example admin audit query command.
 - Updated `docs/implementation-plan.md`:
   - marked audit logging and retrieval path as completed.
+
+## 2026-05-22 - Iteration 45 (PII research refresh + implementation pick)
+
+- Ran focused PII research refresh for middleware decision:
+  - reviewed Presidio concepts, supported entities, and custom recognizer docs.
+- Updated `docs/research-matrix.md`:
+  - added a dedicated "what to implement next for PII middleware" section.
+  - captured findings on Presidio’s Python/sidecar integration model and custom recognizer extensibility.
+  - documented concrete recommendation:
+    - implement deterministic Node baseline now for required categories (email, phone IL+intl, Israeli national ID) with reversible tokens,
+    - keep Presidio sidecar as a later enhancement for broader entity coverage.
+- Updated `docs/implementation-plan.md`:
+  - marked the PII implementation approach decision task complete.
+
+## 2026-05-22 - Iteration 46 (PII checksum references + deterministic redaction implementation)
+
+- Updated `docs/research-matrix.md`:
+  - added explicit Israeli ID checksum references used for deterministic validation:
+    - `python-stdnum` docs (`stdnum.il.idnr`)
+    - `python-stdnum` source implementation (`stdnum/il/idnr.py`)
+- Implemented deterministic inbound PII redaction pipeline:
+  - added `src/domain/pii.ts` (PII category + redaction token repository contract).
+  - added `src/security/pii-crypto.ts` (AES-256-GCM encryption with env-based key loading).
+  - added `src/models/redaction-token.ts` (`redaction_tokens` Mongo model).
+  - added `src/repositories/mongo-redaction-token-repository.ts`.
+  - added `src/repositories/noop-redaction-token-repository.ts`.
+  - added `src/middleware/redact-inbound-pii.ts`:
+    - deterministic detection/redaction for email, phone (IL+intl), and Israeli national ID.
+    - Israeli ID checksum validation before redaction.
+    - tokenized replacement (`[PII_<CATEGORY>:<token>]`) and reversible mapping persistence.
+    - fail-closed behavior (`500 pii-redaction-unavailable`) if encryption key material is missing and PII must be redacted.
+- Wired middleware into `/v1/chat` request path in `src/app.ts`:
+  - executes after prompt-injection detection and before provider call.
+  - `createApp` now supports `redactionTokenRepository` injection for testability.
+- Added tests:
+  - new `src/app.pii.test.ts` covering:
+    - multi-category redaction before provider call,
+    - no-op behavior for non-PII content,
+    - fail-closed behavior for missing encryption key material.
+  - updated `package.json` test scripts to include the new suite.
+- Updated docs:
+  - `README.md` now documents PII control status and required encryption env vars.
+  - `src/docs/openapi.ts` now documents `500` for PII redaction failure.
+  - `docs/implementation-plan.md` now marks deterministic PII redaction implementation as complete.
+
+## 2026-05-22 - Iteration 47 (prompt-injection scope sensitivity tuning)
+
+- Tuned detector prompt guidance in `src/detectors/generic-llm-prompt-injection-detector.ts` to reduce false positives from plain PII-bearing user content:
+  - clarified `INJ-B3` as requests to reveal hidden/system secrets (not merely presence of user-provided sensitive values).
+  - added explicit scope guard: standalone user-provided PII is out of scope for prompt-injection classifier and handled by PII redaction middleware.
+  - reinforced "detect prompt-injection behavior only" in system instruction.
+- Updated `docs/implementation-plan.md`:
+  - marked detector scope-narrowing prompt refinement complete.
+
+## 2026-05-22 - Iteration 48 (explicit audit-token linkage via correlationId)
+
+- Implemented deterministic linkage between `audit_logs` and `redaction_tokens`:
+  - added per-request `correlationId` generation in `/v1/chat` path (`src/app.ts`).
+  - stored `correlationId` on audit entries and redaction token entries.
+- Updated domain/models/repositories:
+  - `src/domain/audit.ts`: added `correlationId` to `AuditLogRecord`.
+  - `src/domain/pii.ts`: added `correlationId` to `RedactionTokenRecord`.
+  - `src/models/audit-log.ts`: added indexed `correlationId` field.
+  - `src/models/redaction-token.ts`: added indexed `correlationId` field.
+  - `src/repositories/mongo-audit-log-repository.ts`: now returns `correlationId` in query results.
+- Updated request typing and middleware plumbing:
+  - `src/types/express.d.ts`: added `Request.correlationId`.
+  - `src/middleware/redact-inbound-pii.ts`: persists `correlationId` with each token mapping.
+- Updated docs:
+  - `README.md` now notes correlation-based deterministic linkage.
+  - `docs/implementation-plan.md` marks correlation linkage task complete.

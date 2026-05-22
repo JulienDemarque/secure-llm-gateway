@@ -13,6 +13,7 @@ export class MongoAuditLogRepository implements AuditLogRepository {
     return docs.map((doc) => ({
       id: String(doc._id),
       timestamp: doc.timestamp,
+      correlationId: doc.correlationId,
       apiKeyId: doc.apiKeyId ?? null,
       model: doc.model ?? null,
       requestHash: doc.requestHash,

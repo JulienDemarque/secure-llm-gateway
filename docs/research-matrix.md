@@ -105,6 +105,28 @@ Research is the top implementation priority. For each topic, this document track
   - Cons: highest design complexity (conflict resolution, confidence thresholds, audit semantics).
   - Fit: recommended target architecture; phase in after deterministic baseline tests are solid.
 
+### Focused research update: what to implement next for PII middleware
+
+- Official sources reviewed
+  - Presidio concepts: <https://microsoft.github.io/presidio/learn_presidio/concepts/>
+  - Presidio supported entities/custom recognizers: <https://microsoft.github.io/presidio/supported_entities/>
+  - Presidio recognizer extension docs: <https://microsoft.github.io/presidio/analyzer/adding_recognizers/>
+  - Israeli ID validator reference (`python-stdnum` docs): <https://arthurdejong.org/python-stdnum/doc/1.13/stdnum.il.idnr>
+  - Israeli ID validator source (`python-stdnum` implementation): <https://raw.githubusercontent.com/arthurdejong/python-stdnum/master/stdnum/il/idnr.py>
+- Key findings
+  - Presidio is Python-first and typically integrated as Analyzer/Anonymizer service(s), often via REST sidecar.
+  - It has strong built-ins for global entities like `EMAIL_ADDRESS` and `PHONE_NUMBER`, and supports custom recognizers for region-specific identifiers.
+  - Assignment requires guaranteed handling of exactly three inbound categories now (email, phone IL+intl, Israeli national ID) with reversible tokenization.
+- Recommended pick for this repo now
+  - Implement PII middleware in-process in Node/TypeScript first:
+    - deterministic email + phone + Israeli ID detection/redaction (with checksum-aware validator for Israeli ID),
+    - reversible token storage in Mongo as already designed.
+  - Keep Presidio as phase-2 enhancement path (optional sidecar) for broader entity coverage and richer NLP/context behavior.
+- Why this pick
+  - Fastest path to assignment compliance with deterministic behavior and simpler operations in the current stack.
+  - Avoids introducing Python service orchestration before baseline controls are complete.
+  - Preserves extensibility: middleware contract can later route to Presidio for additional entities while keeping required categories deterministic.
+
 ## Topic: repo architecture
 
 - Official sources

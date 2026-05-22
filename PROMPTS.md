@@ -39,3 +39,8 @@ original-assignment.md
 "yeah if owaspCategory is tied to the ruleId anyway let's not ask for it from the llm, I am not sure it has a clue what these are, they don't seem like known universal standard. does the category really add to anything? it might just confuse the model, if it's not required, let's also remove it simpligy the whole service."
 
 "ok it works but the detector picks INJ-A1 most of the times, maybe we should give in the system prompt the example of each rule, like "Fake administrator handoff embedded in user content", not actual prompt injection example of course"
+
+"hmmm ok now the prompt injection is too sensitive, we should prompt it to only care about prompt injection, and clarify that pii already inside the input is out of his scope.
+
+see:
+The input contains a secret exfiltration probe for API keys, env vars, credentials in the phrase 'My contact details are: email: yossi.cohen@example.com mobile: +972-50-555-0142 national ID: 000000018'."

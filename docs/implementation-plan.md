@@ -31,6 +31,7 @@
 - [x] Create research matrix document.
 - [x] Record initial shortlist of prompt-injection and PII/security model options for later deep comparison.
 - [x] Complete first-pass deep comparison criteria and pros/cons across shortlisted prompt-injection and PII options.
+- [x] Decide next-step PII implementation approach (Node deterministic baseline now, Presidio sidecar as later enhancement).
 - [ ] Research tools and best practices (official docs, alternatives, recommendation).
 - [x] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
 - [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.
@@ -66,6 +67,8 @@
 - [x] Enforce decision coherence (`blocked=false` only when no injection signal; fail-safe block on contradictions).
 - [x] Simplify detector output: LLM returns `ruleId` only; service derives OWASP category in code.
 - [x] Improve detector prompt with per-rule descriptors + disambiguation guidance to reduce overuse of `INJ-A1`.
+- [x] Narrow detector scope prompt to injection behavior only (exclude standalone user-provided PII from blocking).
+- [x] Link audit and PII token records via shared per-request `correlationId`.
 - [ ] Define detector timeout/fallback policy and audit semantics.
 - [ ] Define benchmark plan (latency, false positives, false negatives).
 
@@ -75,8 +78,8 @@
 - [x] Implement rate limiting module and tests.
 - [x] Add Redis-backed integration tests for rate limiting behavior.
 - [x] Add initial model-assisted prompt-injection guard middleware with structured JSON detector output.
-- [ ] Implement prompt-injection detection module and tests.
-- [ ] Implement PII redaction module and tests.
+- [x] Implement prompt-injection detection module and tests.
+- [x] Implement deterministic PII redaction module and tests (email, phone, Israeli ID + reversible token storage).
 - [ ] Implement output validation module and tests.
 - [x] Implement audit logging and retrieval path.
 

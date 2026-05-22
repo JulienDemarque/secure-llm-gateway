@@ -90,6 +90,7 @@ export const openApiDocument = {
         responses: {
           "200": { description: "Provider completion response" },
           "502": { description: "Detector or provider request failed" },
+          "500": { description: "PII redaction failed or unavailable" },
           "503": { description: "Provider missing key/not ready" },
           "401": { description: "Missing or invalid API key" },
           "400": { description: "Invalid payload or prompt-injection detection block" },

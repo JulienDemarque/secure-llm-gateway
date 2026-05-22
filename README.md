@@ -27,6 +27,8 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Live `/v1/chat` call path via LiteLLM SDK with provider API keys from env.
 - Model-assisted prompt-injection guard on `/v1/chat` using structured JSON detector output.
 - Mongo audit logging for every `/v1/chat` request (`allowed` / `blocked` / `error`) with request/response hashes.
+- Deterministic inbound PII redaction (email, phone, Israeli ID) with reversible token persistence.
+- `correlationId` is stored in both `audit_logs` and `redaction_tokens` for deterministic linkage.
 
 ## Provider configuration (LiteLLM SDK path)
 
@@ -48,6 +50,13 @@ Prompt-injection detection uses a local Ollama model by default.
 If API runs in Docker and Ollama runs on host machine (macOS), set:
 
 - `OLLAMA_HOST=http://host.docker.internal:11434`
+
+## PII redaction encryption configuration
+
+Required for reversible token-based redaction:
+
+- `PII_ENCRYPTION_KEY_B64` (base64-encoded 32-byte key)
+- `PII_ENCRYPTION_KEY_ID` (key identifier stored alongside token records)
 
 ## Run with Docker
 

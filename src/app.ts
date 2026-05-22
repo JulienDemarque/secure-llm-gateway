@@ -1,9 +1,10 @@
 import express, { type NextFunction, type Request, type Response } from "express";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import swaggerUi from "swagger-ui-express";
 import type { AuditLogRepository, AuditStatus } from "./domain/audit.js";
 import type { ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatMessage, LlmClient } from "./domain/llm.js";
+import type { RedactionTokenRepository } from "./domain/pii.js";
 import type { PromptInjectionDetector } from "./domain/prompt-injection.js";
 import { GenericLlmPromptInjectionDetector } from "./detectors/generic-llm-prompt-injection-detector.js";
 import type { RateLimitStore } from "./domain/rate-limit.js";
@@ -13,12 +14,14 @@ import { getRedisClient, getRedisHealthStatus } from "./db/redis.js";
 import { openApiDocument } from "./docs/openapi.js";
 import { authenticateApiKey } from "./middleware/authenticate-api-key.js";
 import { detectPromptInjection } from "./middleware/detect-prompt-injection.js";
+import { redactInboundPii } from "./middleware/redact-inbound-pii.js";
 import { rateLimitPerApiKey } from "./middleware/rate-limit-per-api-key.js";
 import { requireAdmin } from "./middleware/require-admin.js";
 import { LiteLlmClient } from "./providers/litellm-client.js";
 import { MongoApiKeyRepository } from "./repositories/mongo-api-key-repository.js";
 import { MongoAuditLogRepository } from "./repositories/mongo-audit-log-repository.js";
 import { NoopRateLimitStore } from "./repositories/noop-rate-limit-store.js";
+import { MongoRedactionTokenRepository } from "./repositories/mongo-redaction-token-repository.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
 
 /** Request body contract for POST /v1/chat during bootstrap phase. */
@@ -41,6 +44,7 @@ function hasProviderKey(): boolean {
 type CreateAppOptions = {
   apiKeyRepository?: ApiKeyRepository;
   auditLogRepository?: AuditLogRepository;
+  redactionTokenRepository?: RedactionTokenRepository;
   rateLimitStore?: RateLimitStore;
   llmClient?: LlmClient;
   promptInjectionDetector?: PromptInjectionDetector;
@@ -97,6 +101,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const apiKeyRepository = options.apiKeyRepository ?? new MongoApiKeyRepository();
   const auditLogRepository = options.auditLogRepository ?? new MongoAuditLogRepository();
+  const redactionTokenRepository = options.redactionTokenRepository ?? new MongoRedactionTokenRepository();
   const redisClient = getRedisClient();
   const rateLimitStore =
     options.rateLimitStore ?? (redisClient ? new RedisRateLimitStore(redisClient) : new NoopRateLimitStore());
@@ -105,6 +110,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const requireApiKey = authenticateApiKey(apiKeyRepository);
   const enforceRateLimit = rateLimitPerApiKey(rateLimitStore);
   const enforcePromptInjectionGuard = detectPromptInjection(promptInjectionDetector);
+  const enforcePiiRedaction = redactInboundPii(redactionTokenRepository);
   app.use(express.json({ limit: "100kb" }));
   app.get("/openapi.json", (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
@@ -113,6 +119,8 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.use("/v1/chat", (req: Request, res: Response, next: NextFunction) => {
     const startedAt = Date.now();
+    const correlationId = randomUUID();
+    req.correlationId = correlationId;
     const requestHash = hashForAudit(req.body ?? null);
     let responseBody: unknown = null;
 
@@ -151,6 +159,7 @@ export function createApp(options: CreateAppOptions = {}) {
       void auditLogRepository
         .create({
           timestamp: new Date(startedAt),
+          correlationId,
           apiKeyId: req.authContext?.apiKeyId ?? null,
           model,
           requestHash,
@@ -185,6 +194,7 @@ export function createApp(options: CreateAppOptions = {}) {
     requireApiKey,
     enforceRateLimit,
     enforcePromptInjectionGuard,
+    enforcePiiRedaction,
     async (req: Request<unknown, unknown, ChatRequestBody>, res: Response) => {
       if (!validateChatRequest(req, res)) {
         return;
