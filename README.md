@@ -183,3 +183,19 @@ Tail API logs only (exclude Mongo/Redis noise):
 ```bash
 docker compose logs -f --tail=200 api
 ```
+
+## What this service does not protect against
+
+Current controls are focused on authentication, rate limiting, prompt-injection defense, PII redaction, outbound secret-pattern blocking, and auditability. This gateway does **not** currently guarantee protection against:
+
+- toxicity, hate, harassment, or other general safety/content-policy violations (no dedicated moderation classifier in the current path)
+- hallucinations or factual correctness issues in model responses
+- jailbreaks that evade both input and output heuristics/classifiers (best-effort, not perfect prevention)
+- advanced exfiltration channels outside currently enforced secret patterns (for example, encoded/obfuscated leakage variants not yet covered by tests)
+- business-logic abuse at the application layer outside gateway controls
+
+### Prompt-guard scope clarification
+
+- The current prompt-injection detector is a dedicated classifier prompt running on local Ollama (`PROMPT_GUARD_MODEL`, default `llama3.1:8b`).
+- It is tuned for corpus-aligned prompt-injection behavior and rule mapping (`INJ-*`), not full-spectrum content moderation.
+- If you want broader policy coverage (toxicity/violence/self-harm/etc.), add a separate moderation control (for example a dedicated model or policy engine) as an independent middleware.

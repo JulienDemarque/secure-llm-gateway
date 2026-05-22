@@ -1,3 +1,7 @@
+# PDF sanitization
+
+I copied the text of the pdf, excluding the actual prompt injections, into a md file. setup .gitignore, .cursorignore, .claudeignore from the beginning so we got a place later to add the adversarial test data.
+
 
 # Tools used
 
@@ -57,3 +61,7 @@ original-assignment.md
 
 see:
 The input contains a secret exfiltration probe for API keys, env vars, credentials in the phrase 'My contact details are: email: yossi.cohen@example.com mobile: +972-50-555-0142 national ID: 000000018'."
+
+"hey the gh action failed with this: Run gitleaks detect --config .gitleaks.toml --source . --no-git
+/home/runner/work/_temp/4b00f201-f747-475a-b236-1252078518c8.sh: line 1: gitleaks: command not found
+Error: Process completed with exit code 127."

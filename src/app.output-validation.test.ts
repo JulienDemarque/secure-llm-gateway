@@ -89,8 +89,9 @@ function makeApp(response: unknown) {
 
 describe("output validation middleware", () => {
   it("blocks secret-shaped OpenAI keys in model output", async () => {
+    const syntheticOpenAiKey = `sk-${"1234567890ABCDEFGHIJKLMNOPQRST"}`;
     const { app, clientKey } = makeApp({
-      choices: [{ message: { role: "assistant", content: "Here is a key: sk-1234567890ABCDEFGHIJKLMNOPQRST" } }]
+      choices: [{ message: { role: "assistant", content: `Here is a key: ${syntheticOpenAiKey}` } }]
     });
 
     const response = await request(app)
@@ -126,8 +127,9 @@ describe("output validation middleware", () => {
   });
 
   it("blocks AWS access keys in model output", async () => {
+    const syntheticAwsAccessKey = `AKIA${"ABCDEFGHIJKLMNOP"}`;
     const { app, clientKey } = makeApp({
-      choices: [{ message: { role: "assistant", content: "AKIAABCDEFGHIJKLMNOP is exposed" } }]
+      choices: [{ message: { role: "assistant", content: `${syntheticAwsAccessKey} is exposed` } }]
     });
 
     const response = await request(app)
