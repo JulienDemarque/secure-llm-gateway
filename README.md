@@ -150,6 +150,17 @@ Query audit logs as admin:
 curl -H "x-api-key: $ADMIN_API_KEY" "http://localhost:3000/v1/audit?limit=100"
 ```
 
+Recover original inbound request content at audit time (admin only):
+
+```bash
+curl -H "x-api-key: $ADMIN_API_KEY" "http://localhost:3000/v1/audit?limit=100&includeOriginal=true"
+```
+
+`includeOriginal=true` returns both:
+
+- `redactedRequest` (the payload that was forwarded after tokenization)
+- `originalRequest` (best-effort reconstruction by decrypting token mappings for each `correlationId`)
+
 Swagger UI for manual testing:
 
 ```bash

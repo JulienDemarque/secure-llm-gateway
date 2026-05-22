@@ -116,6 +116,14 @@ export const openApiDocument = {
             required: false,
             schema: { type: "integer", minimum: 1, maximum: 500, default: 100 },
             description: "Maximum number of entries to return."
+          },
+          {
+            name: "includeOriginal",
+            in: "query",
+            required: false,
+            schema: { type: "boolean", default: false },
+            description:
+              "When true, include best-effort reconstructed original request payload from encrypted redaction tokens."
           }
         ],
         responses: {

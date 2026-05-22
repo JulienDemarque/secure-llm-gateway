@@ -742,3 +742,31 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Updated docs:
   - `README.md` now notes correlation-based deterministic linkage.
   - `docs/implementation-plan.md` marks correlation linkage task complete.
+
+## 2026-05-22 - Iteration 49 (recoverable original request via admin audit path)
+
+- Implemented audit-time reversibility for redacted inbound payloads:
+  - `src/domain/audit.ts`: added `redactedRequest` field to persisted audit record contract.
+  - `src/models/audit-log.ts`: added `redactedRequest` storage (`Schema.Types.Mixed`) to Mongo audit schema.
+  - `src/repositories/mongo-audit-log-repository.ts`: returns `redactedRequest` in list results.
+- Extended redaction token repository contract for audit reconstruction:
+  - `src/domain/pii.ts`: added `listByCorrelationIds(...)`.
+  - `src/repositories/mongo-redaction-token-repository.ts`: implemented correlation-based token lookup.
+  - `src/repositories/noop-redaction-token-repository.ts`: added empty lookup implementation.
+- Added decrypt support for audit recovery:
+  - `src/security/pii-crypto.ts`: added `decryptPiiValue(...)` with key-id validation and AES-256-GCM auth-tag verification.
+- Updated audit route behavior in `src/app.ts`:
+  - stores per-request `redactedRequest` snapshot in audit entries.
+  - `/v1/audit` now accepts `includeOriginal=true|false` (validated).
+  - when enabled, fetches token records by `correlationId`, decrypts them, and reconstructs `originalRequest` from `redactedRequest`.
+  - reconstruction is best-effort; token decrypt failures are logged without breaking audit responses.
+- Added/updated tests:
+  - `src/app.audit.test.ts`: verifies redacted request persistence and `includeOriginal=true` reconstruction behavior.
+  - `src/app.pii.test.ts`: updated in-memory redaction repository to satisfy new interface method.
+- Updated API/docs:
+  - `src/docs/openapi.ts`: documents `/v1/audit` `includeOriginal` query parameter.
+  - `README.md`: added admin audit recovery usage example and response semantics.
+  - `docs/implementation-plan.md`: marked audit-time original reconstruction task complete.
+- Validation:
+  - `npm run typecheck` passed.
+  - `npm test -- src/app.audit.test.ts src/app.pii.test.ts` passed (full configured test suite executed and passed).

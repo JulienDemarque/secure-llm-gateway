@@ -23,6 +23,7 @@ import { MongoAuditLogRepository } from "./repositories/mongo-audit-log-reposito
 import { NoopRateLimitStore } from "./repositories/noop-rate-limit-store.js";
 import { MongoRedactionTokenRepository } from "./repositories/mongo-redaction-token-repository.js";
 import { RedisRateLimitStore } from "./repositories/redis-rate-limit-store.js";
+import { decryptPiiValue } from "./security/pii-crypto.js";
 
 /** Request body contract for POST /v1/chat during bootstrap phase. */
 type ChatRequestBody = {
@@ -53,6 +54,37 @@ type CreateAppOptions = {
 /** Stable content hash for request/response audit traceability. */
 function hashForAudit(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value ?? null), "utf8").digest("base64");
+}
+
+/** Deep-clones JSON-like payloads for immutable audit snapshots. */
+function cloneJsonValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value ?? null)) as T;
+}
+
+/** Replaces stored PII placeholders in string content with recovered plaintext. */
+function replaceTokensInString(value: string, tokenValues: Map<string, string>): string {
+  return value.replace(/\[PII_[A-Z_]+:([a-f0-9]{16})\]/g, (placeholder: string, token: string) => {
+    return tokenValues.get(token) ?? placeholder;
+  });
+}
+
+/** Recursively applies token replacement across objects/arrays/string fields. */
+function replaceTokensRecursively(value: unknown, tokenValues: Map<string, string>): unknown {
+  if (typeof value === "string") {
+    return replaceTokensInString(value, tokenValues);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => replaceTokensRecursively(item, tokenValues));
+  }
+  if (value && typeof value === "object") {
+    const objectValue = value as Record<string, unknown>;
+    const replaced: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(objectValue)) {
+      replaced[key] = replaceTokensRecursively(nestedValue, tokenValues);
+    }
+    return replaced;
+  }
+  return value;
 }
 
 /** Maps final HTTP status to assignment-required audit status values. */
@@ -139,6 +171,7 @@ export function createApp(options: CreateAppOptions = {}) {
     }) as Response["send"];
 
     res.on("finish", () => {
+      const redactedRequest = cloneJsonValue(req.body ?? null);
       const detectedThreats =
         req.promptDetectionResult && req.promptDetectionResult.blocked
           ? [
@@ -162,6 +195,7 @@ export function createApp(options: CreateAppOptions = {}) {
           correlationId,
           apiKeyId: req.authContext?.apiKeyId ?? null,
           model,
+          redactedRequest,
           requestHash,
           responseHash: hashForAudit(responseBody),
           status: toAuditStatus(res.statusCode),
@@ -226,6 +260,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/v1/audit", requireApiKey, enforceRateLimit, requireAdmin, async (req: Request, res: Response) => {
     const sinceRaw = typeof req.query.since === "string" ? req.query.since : undefined;
     const limitRaw = typeof req.query.limit === "string" ? req.query.limit : undefined;
+    const includeOriginalRaw = typeof req.query.includeOriginal === "string" ? req.query.includeOriginal : undefined;
 
     let since: Date | undefined;
     if (sinceRaw) {
@@ -245,8 +280,59 @@ export function createApp(options: CreateAppOptions = {}) {
       limit = parsedLimit;
     }
 
+    let includeOriginal = false;
+    if (includeOriginalRaw !== undefined) {
+      if (includeOriginalRaw === "true") {
+        includeOriginal = true;
+      } else if (includeOriginalRaw === "false") {
+        includeOriginal = false;
+      } else {
+        return res.status(400).json({ error: "includeOriginal must be true or false when provided" });
+      }
+    }
+
     const entries = await auditLogRepository.list({ since, limit });
-    return res.status(200).json({ entries });
+    if (!includeOriginal) {
+      return res.status(200).json({ entries });
+    }
+
+    const correlationIds = entries.map((entry) => entry.correlationId);
+    const tokenRecords = await redactionTokenRepository.listByCorrelationIds(correlationIds);
+    const tokensByCorrelation = new Map<string, Map<string, string>>();
+
+    for (const record of tokenRecords) {
+      let tokenMap = tokensByCorrelation.get(record.correlationId);
+      if (!tokenMap) {
+        tokenMap = new Map<string, string>();
+        tokensByCorrelation.set(record.correlationId, tokenMap);
+      }
+      if (tokenMap.has(record.token)) {
+        continue;
+      }
+      try {
+        tokenMap.set(
+          record.token,
+          decryptPiiValue({
+            ciphertext: record.ciphertext,
+            iv: record.iv,
+            authTag: record.authTag,
+            keyId: record.keyId
+          })
+        );
+      } catch (error: unknown) {
+        console.error("audit-redaction-token-decrypt-failed", { correlationId: record.correlationId, error });
+      }
+    }
+
+    const entriesWithRecoveredOriginal = entries.map((entry) => {
+      const tokenMap = tokensByCorrelation.get(entry.correlationId) ?? new Map<string, string>();
+      return {
+        ...entry,
+        originalRequest: replaceTokensRecursively(entry.redactedRequest, tokenMap)
+      };
+    });
+
+    return res.status(200).json({ entries: entriesWithRecoveredOriginal });
   });
 
   // Converts malformed JSON parser errors into stable API error payloads.

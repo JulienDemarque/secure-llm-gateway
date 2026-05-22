@@ -41,6 +41,11 @@ class InMemoryRedactionTokenRepository implements RedactionTokenRepository {
   async createMany(records: RedactionTokenRecord[]): Promise<void> {
     this.records.push(...records);
   }
+
+  async listByCorrelationIds(correlationIds: string[]): Promise<RedactionTokenRecord[]> {
+    const set = new Set(correlationIds);
+    return this.records.filter((record) => set.has(record.correlationId));
+  }
 }
 
 class CapturingLlmClient implements LlmClient {

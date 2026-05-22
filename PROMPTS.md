@@ -1,6 +1,14 @@
 
+# Tools used
 
-# First Prompt:
+ChatGPT for initial research, Cursor for actual work
+
+# Why multiple tools
+
+Using ChatGPT avoids starting with a messy project, I get an idea of the architecture and solutions out there before the first prompt.
+
+# First Prompt to Cursor Agent:
+
 "Your role is to format and reword prompts so they are concie and clear. Do not edit any files. I will give you prompts intended as instructions for another cursor agent, check the prompt, give suggestion, organize the prompt so they are more readable. Answer me in the chat only.
 Here is the first prompt:
 'In the docs folder you will found the original-assignement.md file. It's a safe to read version of the original assigment. 
@@ -12,6 +20,11 @@ Here is a high level plan:
 - top of the todo list will be to do web research for existing tools and best practices on using the tools, repo architecture, testing, security and more. Document each topic in the architecture doc, include links to official docs, propose different approach and suggest the best fit.
 for the prompt injection detection, I am thinking to use olama, either as a sidecar or with the js sdk and a local classifier (TBD which one).'
 "
+
+
+# What I rejected
+
+Rejected litellm first implementation, Cursor got confused because litellm doc for js seems to focus on the proxy and not the simple sdk.
 
 
 # Example prompts:

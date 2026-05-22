@@ -18,6 +18,7 @@ export type AuditLogRecord = {
   correlationId: string;
   apiKeyId: string | null;
   model: string | null;
+  redactedRequest: unknown;
   requestHash: string;
   responseHash: string;
   status: AuditStatus;

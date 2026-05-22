@@ -82,6 +82,7 @@
 - [x] Implement deterministic PII redaction module and tests (email, phone, Israeli ID + reversible token storage).
 - [ ] Implement output validation module and tests.
 - [x] Implement audit logging and retrieval path.
+- [x] Add admin audit-time original request reconstruction (`includeOriginal=true`) from encrypted redaction tokens.
 
 ### Phase 6: hardening and release readiness
 

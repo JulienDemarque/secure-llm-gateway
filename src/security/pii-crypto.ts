@@ -1,4 +1,4 @@
-import { createCipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 const IV_LENGTH = 12;
 const KEY_LENGTH = 32;
@@ -42,4 +42,25 @@ export function encryptPiiValue(value: string): {
     authTag: authTag.toString("base64"),
     keyId
   };
+}
+
+/** Decrypts stored token value for authorized audit recovery path. */
+export function decryptPiiValue(params: {
+  ciphertext: string;
+  iv: string;
+  authTag: string;
+  keyId: string;
+}): string {
+  const { key, keyId } = getEncryptionMaterial();
+  if (params.keyId !== keyId) {
+    throw new Error("pii-encryption-key-mismatch");
+  }
+
+  const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(params.iv, "base64"));
+  decipher.setAuthTag(Buffer.from(params.authTag, "base64"));
+  const plaintext = Buffer.concat([
+    decipher.update(Buffer.from(params.ciphertext, "base64")),
+    decipher.final()
+  ]);
+  return plaintext.toString("utf8");
 }

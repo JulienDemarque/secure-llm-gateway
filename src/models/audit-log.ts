@@ -7,6 +7,7 @@ type AuditLogDocument = {
   correlationId: string;
   apiKeyId: string | null;
   model: string | null;
+  redactedRequest: unknown;
   requestHash: string;
   responseHash: string;
   status: AuditStatus;
@@ -25,6 +26,7 @@ const auditLogSchema = new Schema<AuditLogDocument>(
     correlationId: { type: String, required: true, index: true },
     apiKeyId: { type: String, required: false, default: null, index: true },
     model: { type: String, required: false, default: null },
+    redactedRequest: { type: Schema.Types.Mixed, required: true },
     requestHash: { type: String, required: true },
     responseHash: { type: String, required: true },
     status: { type: String, enum: ["allowed", "blocked", "error"], required: true, index: true },

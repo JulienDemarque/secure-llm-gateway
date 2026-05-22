@@ -4,12 +4,14 @@ import { createApp } from "./app.js";
 import type { AuditLogQuery, AuditLogRecord, AuditLogRepository, CreateAuditLogInput } from "./domain/audit.js";
 import type { ApiKeyRecord, ApiKeyRepository } from "./domain/auth.js";
 import type { LlmChatRequest, LlmClient } from "./domain/llm.js";
+import type { RedactionTokenRecord, RedactionTokenRepository } from "./domain/pii.js";
 import type {
   PromptInjectionDetectionResult,
   PromptInjectionDetector,
   PromptMessage
 } from "./domain/prompt-injection.js";
 import { hashApiKey } from "./security/hash.js";
+import { encryptPiiValue } from "./security/pii-crypto.js";
 
 class InMemoryApiKeyRepository implements ApiKeyRepository {
   private readonly byHash = new Map<string, ApiKeyRecord>();
@@ -42,6 +44,19 @@ class InMemoryAuditLogRepository implements AuditLogRepository {
       ? this.entries.filter((entry) => entry.timestamp.getTime() >= query.since!.getTime())
       : this.entries;
     return filtered.slice(0, query.limit);
+  }
+}
+
+class InMemoryRedactionTokenRepository implements RedactionTokenRepository {
+  readonly records: RedactionTokenRecord[] = [];
+
+  async createMany(records: RedactionTokenRecord[]): Promise<void> {
+    this.records.push(...records);
+  }
+
+  async listByCorrelationIds(correlationIds: string[]): Promise<RedactionTokenRecord[]> {
+    const set = new Set(correlationIds);
+    return this.records.filter((record) => set.has(record.correlationId));
   }
 }
 
@@ -94,6 +109,7 @@ function makeApp({
     }
   ]);
   const auditLogRepository = new InMemoryAuditLogRepository();
+  const redactionTokenRepository = new InMemoryRedactionTokenRepository();
   process.env.OPENAI_API_KEY = "test-provider-key";
 
   return {
@@ -101,9 +117,11 @@ function makeApp({
       apiKeyRepository,
       llmClient: new FakeLlmClient(providerThrows),
       promptInjectionDetector: new FakePromptInjectionDetector(detectorResult),
-      auditLogRepository
+      auditLogRepository,
+      redactionTokenRepository
     }),
     auditLogRepository,
+    redactionTokenRepository,
     keys: { clientKey, adminKey }
   };
 }
@@ -129,6 +147,10 @@ describe("audit logging", () => {
     expect(auditLogRepository.entries).toHaveLength(1);
     expect(auditLogRepository.entries[0].status).toBe("allowed");
     expect(auditLogRepository.entries[0].apiKeyId).toBe("client-audit-1");
+    expect(auditLogRepository.entries[0].redactedRequest).toEqual({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: "hello" }]
+    });
   });
 
   it("stores blocked threat metadata when prompt injection is detected", async () => {
@@ -195,5 +217,54 @@ describe("audit logging", () => {
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.entries)).toBe(true);
     expect(response.body.entries).toHaveLength(1);
+  });
+
+  it("returns reconstructed original request when includeOriginal=true", async () => {
+    process.env.PII_ENCRYPTION_KEY_B64 = Buffer.alloc(32, 0).toString("base64");
+    process.env.PII_ENCRYPTION_KEY_ID = "test-key-v1";
+
+    const { app, auditLogRepository, redactionTokenRepository, keys } = makeApp({
+      detectorResult: {
+        blocked: false,
+        ruleId: "NONE",
+        owaspCategory: "NONE",
+        confidence: 0,
+        rationale: "allow"
+      }
+    });
+
+    const correlationId = "corr-123";
+    auditLogRepository.entries.unshift({
+      id: "audit-1",
+      timestamp: new Date("2026-05-22T10:00:00.000Z"),
+      correlationId,
+      apiKeyId: "client-audit-1",
+      model: "gpt-4o",
+      redactedRequest: {
+        model: "gpt-4o",
+        messages: [{ role: "user", content: "Contact me at [PII_EMAIL:deadbeefcafebabe]" }]
+      },
+      requestHash: "req-hash",
+      responseHash: "res-hash",
+      status: "allowed",
+      latencyMs: 12,
+      detectedThreats: []
+    });
+
+    redactionTokenRepository.records.push({
+      token: "deadbeefcafebabe",
+      correlationId,
+      category: "email",
+      ...encryptPiiValue("yossi.cohen@example.com"),
+      apiKeyId: "client-audit-1",
+      requestHash: "req-hash",
+      createdAt: new Date("2026-05-22T10:00:00.000Z")
+    });
+
+    const response = await request(app).get("/v1/audit?includeOriginal=true&limit=10").set("x-api-key", keys.adminKey);
+    expect(response.status).toBe(200);
+    expect(response.body.entries).toHaveLength(1);
+    expect(response.body.entries[0].redactedRequest.messages[0].content).toContain("[PII_EMAIL:deadbeefcafebabe]");
+    expect(response.body.entries[0].originalRequest.messages[0].content).toContain("yossi.cohen@example.com");
   });
 });

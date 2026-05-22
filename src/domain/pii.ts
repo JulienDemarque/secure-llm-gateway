@@ -18,4 +18,5 @@ export type RedactionTokenRecord = {
 /** Storage abstraction for reversible redaction token persistence. */
 export interface RedactionTokenRepository {
   createMany(records: RedactionTokenRecord[]): Promise<void>;
+  listByCorrelationIds(correlationIds: string[]): Promise<RedactionTokenRecord[]>;
 }

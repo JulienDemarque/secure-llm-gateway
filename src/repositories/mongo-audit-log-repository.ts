@@ -16,6 +16,7 @@ export class MongoAuditLogRepository implements AuditLogRepository {
       correlationId: doc.correlationId,
       apiKeyId: doc.apiKeyId ?? null,
       model: doc.model ?? null,
+      redactedRequest: doc.redactedRequest ?? null,
       requestHash: doc.requestHash,
       responseHash: doc.responseHash,
       status: doc.status,
