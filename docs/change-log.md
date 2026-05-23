@@ -1035,3 +1035,14 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - Redis client lifecycle logic and status reporting
   - Ollama health ready/not-ready result mapping
 - Updated `package.json` test script file lists (`test`, `test:watch`, `test:coverage`) to include all new suites.
+
+## 2026-05-24 - Iteration 71 (app.ts branch-coverage boost via validation tests)
+
+- Added `src/app.request-validation.test.ts` to exercise branch-heavy app paths that were under-covered:
+  - malformed JSON handling (`invalid-json`).
+  - `/v1/chat` request validation branches (model/messages/role/max_tokens).
+  - provider-not-configured (`503`) behavior when provider env vars are missing.
+  - correlation-id normalization/fallback behavior from request headers.
+  - `/v1/audit` query validation branches (`since`, `limit`, `includeOriginal`).
+  - `/healthz` provider dependency state when provider key is absent.
+- Updated `package.json` scripts (`test`, `test:watch`, `test:coverage`) to include the new suite.
