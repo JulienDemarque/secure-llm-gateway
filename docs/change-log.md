@@ -1015,3 +1015,23 @@ Tracks repository changes made during this project. Each entry summarizes what c
 
 - Added Codecov coverage badge to the top of root `README.md` using repository-specific badge URL.
 - Purpose: expose current coverage status directly in repository landing page and PR reviews.
+
+## 2026-05-24 - Iteration 70 (coverage uplift test batch for detector/db modules)
+
+- Added focused unit tests for previously under-covered modules:
+  - `src/detectors/generic-llm-prompt-injection-detector.test.ts`
+  - `src/db/ollama.test.ts`
+  - `src/db/mongoose.test.ts`
+  - `src/db/redis.test.ts`
+- New detector tests cover:
+  - env fallback behavior
+  - rationale sanitization
+  - fail-safe coercion for contradictory outputs
+  - blocked+NONE normalization path
+  - invalid schema / non-object / empty-content error paths
+- New DB/health tests cover:
+  - configured vs non-configured health states
+  - connect/disconnect idempotence and state transitions
+  - Redis client lifecycle logic and status reporting
+  - Ollama health ready/not-ready result mapping
+- Updated `package.json` test script file lists (`test`, `test:watch`, `test:coverage`) to include all new suites.
