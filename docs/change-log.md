@@ -980,3 +980,33 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - audit logging
   - secrets handling
 - Purpose: align README wording more directly with assignment expectation for control-by-control architecture explanation.
+
+## 2026-05-23 - Iteration 67 (coverage reporting + Codecov integration)
+
+- Added coverage test command in `package.json`:
+  - `test:coverage` runs the unit-control suites with Vitest coverage enabled.
+  - emits `text-summary` and `lcov` output for local inspection and CI upload.
+- Added coverage provider dependency:
+  - `@vitest/coverage-v8` in `devDependencies`.
+- Updated CI workflow `.github/workflows/ci.yml`:
+  - switched test step to `npm run test:coverage`.
+  - added Codecov upload step via `codecov/codecov-action@v5` targeting `coverage/lcov.info`.
+  - added job permissions needed for modern Codecov auth flows (`contents: read`, `id-token: write`).
+- Updated `README.md`:
+  - documented `npm run test:coverage`.
+  - documented CI coverage upload behavior and `CODECOV_TOKEN` requirement for private repositories.
+
+## 2026-05-23 - Iteration 68 (line-coverage gate + LiteLLM adapter tests)
+
+- Added a minimum line-coverage gate to coverage execution:
+  - `package.json` `test:coverage` now runs coverage then executes `coverage:check`.
+  - `coverage:check` parses `coverage/lcov.info` and enforces minimum line percentage.
+  - default threshold is `70%`, configurable via `COVERAGE_MIN_LINES_PERCENT`.
+- Expanded explicit test list to include provider adapter tests:
+  - added `src/providers/litellm-client.test.ts`.
+  - updated `test`, `test:watch`, and `test:coverage` scripts to include the new file.
+- New LiteLLM adapter tests cover:
+  - success path payload mapping (`maxTokens` -> `max_tokens`).
+  - Error passthrough behavior.
+  - non-Error failure wrapping behavior.
+- Updated `README.md` with a dedicated coverage gate section and threshold override example.

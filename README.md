@@ -8,6 +8,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Run in dev mode: `npm run dev`
 - Typecheck: `npm run typecheck`
 - Run tests: `npm test`
+- Run tests with coverage: `npm run test:coverage`
 - Run Redis integration tests: `npm run test:integration:redis`
 - Run adversarial corpus eval tests: `npm run test:eval:adversarial`
 - Build: `npm run build`
@@ -36,7 +37,10 @@ GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pul
 
 - gitleaks secret scan (`.gitleaks.toml`)
 - TypeScript typecheck
-- Unit test suite
+- Unit test suite with LCOV coverage output
+- Codecov upload (`coverage/lcov.info`)
+
+For private repositories, set `CODECOV_TOKEN` in GitHub repository secrets.
 
 ## Placeholder endpoints
 
@@ -273,3 +277,10 @@ Notes:
 
 - In local/home environments without GPU acceleration, prompt-guard classification latency can be in the ~10-30s range per request depending on machine load and prompt size (this is acceptable for assignment-grade adversarial eval runs).
 - For production targets, use GPU acceleration for detector runtime (or a smaller/faster guard model) and enforce explicit detector timeout/fallback policy to keep request latency predictable.
+
+## Coverage gate
+
+- `npm run test:coverage` now runs unit tests with coverage and enforces a minimum line-coverage gate.
+- Default gate is `70%` lines across the measured codebase.
+- Override locally (or in CI) with `COVERAGE_MIN_LINES_PERCENT`, for example:
+  - `COVERAGE_MIN_LINES_PERCENT=75 npm run test:coverage`
