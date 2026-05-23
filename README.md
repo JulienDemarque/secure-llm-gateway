@@ -1,5 +1,7 @@
 # SecureLLM Gateway
 
+[![codecov](https://codecov.io/gh/JulienDemarque/secure-llm-gateway/graph/badge.svg?token=iowv5ewp8g)](https://codecov.io/gh/JulienDemarque/secure-llm-gateway)
+
 Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 
 ## Quick start

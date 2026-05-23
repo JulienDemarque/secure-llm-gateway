@@ -1010,3 +1010,8 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - Error passthrough behavior.
   - non-Error failure wrapping behavior.
 - Updated `README.md` with a dedicated coverage gate section and threshold override example.
+
+## 2026-05-24 - Iteration 69 (Codecov badge in root README)
+
+- Added Codecov coverage badge to the top of root `README.md` using repository-specific badge URL.
+- Purpose: expose current coverage status directly in repository landing page and PR reviews.
