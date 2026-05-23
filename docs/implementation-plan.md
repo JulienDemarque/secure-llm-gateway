@@ -24,6 +24,7 @@
 - [x] Add `test-prompts/` to `.cursorignore`.
 - [x] Add Cursor rules for safe small-step iteration and untrusted corpus handling.
 - [x] Add contributor guidance for safe corpus handling in repo documentation.
+- [x] Define test-prompts dataset contract (schema, naming, expected fields).
 - [x] Add code-commenting convention rule (concise JSDoc on exported/non-obvious functions).
 
 ### Phase 2: research-first decisions (highest priority)
@@ -95,6 +96,6 @@
 - [x] Add TypeScript typecheck to pre-commit hook checks.
 - [x] Add structured JSON logging with per-request correlation ID.
 - [ ] Activate pre-commit hook in local git environment.
-- [ ] Add adversarial test variations and regression suite.
+- [x] Add adversarial test variations and regression suite.
 - [ ] Document known limitations and operational runbook.
 - [ ] Final end-to-end validation against assignment acceptance criteria.

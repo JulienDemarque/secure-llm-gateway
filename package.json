@@ -11,6 +11,7 @@
     "test": "vitest run src/app.auth.test.ts src/app.rate-limit.test.ts src/app.prompt-injection.test.ts src/app.audit.test.ts src/app.pii.test.ts src/app.output-validation.test.ts",
     "test:watch": "vitest src/app.auth.test.ts src/app.rate-limit.test.ts src/app.prompt-injection.test.ts src/app.audit.test.ts src/app.pii.test.ts src/app.output-validation.test.ts",
     "test:integration:redis": "ENABLE_REDIS_INTEGRATION_TESTS=1 vitest run src/app.rate-limit.redis.integration.test.ts",
+    "test:eval:adversarial": "ENABLE_ADVERSARIAL_EVAL=1 vitest run src/app.adversarial.integration.test.ts",
     "seed:api-keys": "tsx src/scripts/seed-api-keys.ts",
     "docker:up": "docker compose up -d --build",
     "docker:up:dev": "docker compose --profile dev up -d --build api-dev",

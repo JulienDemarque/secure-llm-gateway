@@ -6,6 +6,7 @@ Covers post-assignment hardening and scale priorities while keeping assignment s
 
 - Assignment default: in-process Ollama JS SDK detector.
 - Scale path: move detector to dedicated sidecar service.
+- Production performance requirement: run detector with GPU acceleration (or adopt smaller/faster guard model with strict timeout policy) to avoid high p95/p99 latency from CPU-only inference.
 - Why sidecar at scale:
   - isolate memory/CPU pressure from API process
   - independent scaling and rollout of detection models

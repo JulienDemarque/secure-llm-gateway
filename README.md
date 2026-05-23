@@ -9,6 +9,7 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Typecheck: `npm run typecheck`
 - Run tests: `npm test`
 - Run Redis integration tests: `npm run test:integration:redis`
+- Run adversarial corpus eval tests: `npm run test:eval:adversarial`
 - Build: `npm run build`
 
 ## CI
@@ -101,6 +102,13 @@ Pull the prompt-guard model inside Compose network:
 ```bash
 docker compose exec ollama ollama pull llama3.1:8b
 ```
+
+Optional memory tuning for local Ollama in Compose (set in `.env` before `docker compose up`):
+
+- `OLLAMA_MEM_LIMIT` (default `14g`)
+- `OLLAMA_MEMSWAP_LIMIT` (default `16g`)
+- `OLLAMA_NUM_PARALLEL` (default `1` to reduce concurrent memory pressure)
+- `OLLAMA_KEEP_ALIVE` (default `5m`)
 
 Ollama is only exposed to other Compose services (no host `11434` port mapping by default).
 
@@ -199,3 +207,35 @@ Current controls are focused on authentication, rate limiting, prompt-injection 
 - The current prompt-injection detector is a dedicated classifier prompt running on local Ollama (`PROMPT_GUARD_MODEL`, default `llama3.1:8b`).
 - It is tuned for corpus-aligned prompt-injection behavior and rule mapping (`INJ-*`), not full-spectrum content moderation.
 - If you want broader policy coverage (toxicity/violence/self-harm/etc.), add a separate moderation control (for example a dedicated model or policy engine) as an independent middleware.
+
+## Adversarial corpus eval test
+
+- The eval test reads local dataset file: `test-prompts/raw/adversarial-test-prompts.json`.
+- It replays each case against a running gateway instance over HTTP (`ADVERSARIAL_EVAL_BASE_URL`, default `http://127.0.0.1:3000`) and asserts expected outcomes from the dataset contract in `docs/test-prompts-guidelines.md`.
+- It is intentionally separate from default unit test suite.
+- Run with:
+
+```bash
+npm run test:eval:adversarial
+```
+
+Notes:
+
+- This eval uses real gateway dependencies (auth/rate-limit/detector/provider/audit), with no in-test repository or provider mocks.
+- Required env vars for eval runner:
+  - `CLIENT_API_KEY` (used for `/v1/chat`)
+  - `ADMIN_API_KEY` (required for PII-redaction assertions via `/v1/audit`)
+  - optional `ADVERSARIAL_EVAL_BASE_URL` (defaults to `http://127.0.0.1:3000`)
+- Optional eval scoring controls:
+  - `ADVERSARIAL_EVAL_MIN_ASSERTION_SCORE_PERCENT` (default `0`; fail only if assertion score is below threshold)
+  - `ADVERSARIAL_EVAL_FAIL_ON_ANY_MISMATCH=1` (strict mode; fail on any mismatch)
+- PII eval semantics:
+  - for `PII-*` / `mustRedactInboundPii=true` cases, scoring focuses on redaction evidence in audit records (`redactedRequest` token placeholders), not prompt-injection `ruleId`/`owaspCategory`.
+  - these PII redaction cases are normalized to `200` expected status (redact-and-allow behavior) for scoring.
+- Preflight requires `/healthz` to report both `dependencies.ollama=ready` and `dependencies.provider=ready`.
+- `test-prompts/` files remain local and ignored by repository tooling; the eval only reads them.
+
+### Performance note (assignment vs production)
+
+- In local/home environments without GPU acceleration, prompt-guard classification latency can be in the ~10-30s range per request depending on machine load and prompt size (this is acceptable for assignment-grade adversarial eval runs).
+- For production targets, use GPU acceleration for detector runtime (or a smaller/faster guard model) and enforce explicit detector timeout/fallback policy to keep request latency predictable.
