@@ -1046,3 +1046,15 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - `/v1/audit` query validation branches (`since`, `limit`, `includeOriginal`).
   - `/healthz` provider dependency state when provider key is absent.
 - Updated `package.json` scripts (`test`, `test:watch`, `test:coverage`) to include the new suite.
+
+## 2026-05-24 - Iteration 72 (test script cleanup with glob + excludes)
+
+- Simplified `package.json` test scripts to remove hardcoded per-file test lists.
+- `test`, `test:watch`, and `test:coverage` now discover tests via `src/**/*.test.ts`.
+- Preserved deterministic CI scope by excluding non-unit suites:
+  - `src/**/*.integration.test.ts`
+  - `src/app.adversarial.integration.test.ts`
+- Result: easier maintenance when adding new unit tests while keeping integration/eval suites opt-in via dedicated scripts.
+- Follow-up: switched script glob selection to explicit Vitest `--include` usage to avoid CLI filter mismatch and ensure test discovery works reliably.
+- Finalized approach for Vitest v4 compatibility: rely on default `*.test.*` discovery and keep deterministic scope using explicit `--exclude` for integration/eval suites.
+- Added explicit `dist/**` exclusion after validating scripts, to avoid accidental execution of compiled CommonJS test artifacts during local runs.
