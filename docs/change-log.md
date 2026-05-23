@@ -958,3 +958,25 @@ Tracks repository changes made during this project. Each entry summarizes what c
   - skips `ruleId` / `owaspCategory` assertions for PII-redaction cases to avoid false negatives from injection-only fields.
   - normalizes expected HTTP status to `200` for redaction cases (current middleware behavior is redact-and-allow, not block).
 - Updated `README.md` eval notes to explicitly document PII scoring semantics and normalized status behavior.
+
+## 2026-05-23 - Iteration 65 (README consolidation + PROMPTS.md compliance polish)
+
+- Consolidated README surface to a single root file:
+  - merged docs index content into root `README.md` under a new `Documentation index` section.
+  - removed redundant `docs/README.md`.
+- Polished `PROMPTS.md` to align with assignment-required structure:
+  - explicit sections for tools used, multi-tool rationale, three verbatim prompt examples (code/security/debug) with outcomes, rejected output, two "more time" items, and verbatim first AI interaction.
+  - added a concise untrusted-input handling note for sanitized assignment usage and ignored prompt-corpus paths.
+
+## 2026-05-23 - Iteration 66 (README control-architecture paragraph pass)
+
+- Updated root `README.md` with an explicit `Security architecture by control` section.
+- Added one concise architecture paragraph per mandatory control area:
+  - authentication/authorization
+  - rate limiting
+  - prompt-injection detection
+  - inbound PII redaction (reversible)
+  - outbound output validation
+  - audit logging
+  - secrets handling
+- Purpose: align README wording more directly with assignment expectation for control-by-control architecture explanation.

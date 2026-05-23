@@ -12,6 +12,24 @@ Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
 - Run adversarial corpus eval tests: `npm run test:eval:adversarial`
 - Build: `npm run build`
 
+## Documentation index
+
+Project docs are consolidated under `docs/`:
+
+- `docs/implementation-plan.md`: phased implementation checklist and remaining scope.
+- `docs/technical-architecture-outline.md`: architecture, trust boundaries, and middleware layout.
+- `docs/research-matrix.md`: research topics, options, and recommendations.
+- `docs/detection-approach-comparison.md`: detector approach tradeoffs.
+- `docs/iteration-protocol.md`: small-step iteration workflow.
+- `docs/change-log.md`: chronological implementation log.
+- `docs/test-prompts-guidelines.md`: adversarial dataset contract and safety guidance.
+- `docs/dev-environment-preflight.md`: local environment readiness checks.
+- `docs/requirements-traceability.md`: mapping from assignment requirements to implementation.
+- `docs/security-ci-baseline.md`: secret scan / CI baseline.
+- `docs/ollama-js-integration-notes.md`: Ollama SDK constraints and integration notes.
+- `docs/productionalization-notes.md`: follow-up hardening and scale notes.
+- `docs/context-budget-guidelines.md`: guidance for keeping context focused.
+
 ## CI
 
 GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pull request:
@@ -40,6 +58,22 @@ GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pul
 - Outbound output validation blocks secret-shaped leaks (`sk-*`, JWT, AWS access key) and injection-echo responses; outbound PII is redacted before returning to client.
 - Structured JSON logging via `pino` with per-request `correlationId` (request start/end + latency + status).
 - `correlationId` is stored in both `audit_logs` and `redaction_tokens` for deterministic linkage.
+
+## Security architecture by control
+
+**1) Authentication and authorization.** Every protected route requires `x-api-key`, which is looked up as a hash-backed credential in Mongo. Request context includes key identity and role, and authorization is enforced as a separate middleware so only `admin` keys can access `/v1/audit`.
+
+**2) Rate limiting.** A Redis sliding-window limiter runs per API key and is isolated from auth/business logic. The default limit is 30 req/min and can be configured per key, with deterministic `429` behavior when the window is exceeded.
+
+**3) Prompt-injection detection (inbound).** Incoming chat messages are classified before provider calls using a structured-output detector contract (rule ID + confidence + rationale). Requests classified as injection are blocked with `400`, and detector failures are surfaced explicitly as gateway errors.
+
+**4) PII redaction (inbound, reversible).** Before forwarding to the provider, inbound message content is scanned for required categories (email, phone IL+intl, Israeli national ID) and replaced with token placeholders. Original spans are encrypted and persisted so audit retrieval can reconstruct originals for authorized administrators.
+
+**5) Output validation (outbound).** Model output is treated as untrusted and inspected for secret-shaped leakage patterns and injection-echo behavior. Matching responses are blocked, and outbound PII spans are redacted before returning content to the caller.
+
+**6) Audit logging.** Every `/v1/chat` request writes an audit record in Mongo with timestamps, API key ID, model, request/response hashes, latency, status (`allowed`/`blocked`/`error`), and threat metadata. Correlation IDs connect request logs, redaction records, and structured runtime logs.
+
+**7) Secrets handling.** Provider credentials are sourced from environment variables only; no secrets are committed in code or logged in plaintext. Repository-level secret scanning is enforced via `.gitleaks.toml` and CI, with additional local pre-commit coverage available.
 
 ## Provider configuration (LiteLLM SDK path)
 

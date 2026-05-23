@@ -1,67 +1,67 @@
-# PDF sanitization
+# PROMPTS.md
 
-I copied the text of the pdf, excluding the actual prompt injections, into a md file. setup .gitignore, .cursorignore, .claudeignore from the beginning so we got a place later to add the adversarial test data.
+This document records how AI tools were used during the SecureLLM Gateway assignment.
 
+## 1) Tools used
 
-# Tools used
+- **Cursor**: primary implementation tool (code changes, test iteration, architecture/docs updates).
+- **ChatGPT**: early research and sanity-checking architecture directions before coding.
 
-ChatGPT for initial research, Cursor for actual work
+## 2) Why multiple tools
 
-# Why multiple tools
+I used ChatGPT first for broad framing and alternatives, then moved execution into Cursor for concrete implementation and iteration with the actual codebase.
 
-Using ChatGPT avoids starting with a messy project, I get an idea of the architecture and solutions out there before the first prompt.
+One explicit cross-check moment: the early LiteLLM path was reconsidered after reviewing docs and runtime behavior; I asked Cursor to rework the integration toward the JS SDK usage I wanted and away from a proxy-first interpretation. This affected the same gateway integration files that were initially generated.
 
-# First Prompt to Cursor Agent:
+## 3) Three example prompts (verbatim) and what I did with the output
 
-"Your role is to format and reword prompts so they are concie and clear. Do not edit any files. I will give you prompts intended as instructions for another cursor agent, check the prompt, give suggestion, organize the prompt so they are more readable. Answer me in the chat only.
-Here is the first prompt:
-'In the docs folder you will found the original-assignement.md file. It's a safe to read version of the original assigment. 
-The first step is going to make a plan, do not write a single line of code before we review the full plan together.
-Here is a high level plan:
-- first we want to be able to handle prompt injections test and keep cursor safe. let's add a folder for the test prompts that we will: gitignore, cursorignore, claudeignore
-- next we want to add some cursor rules for how to operate safely and follow best practices. part of the rule should be that each iteration should be a small step and a suggestion on the next iteration, so I can review bit by bit.
-- next we want to write down a technical doc that has a todo list, this will guide the development until completion
-- top of the todo list will be to do web research for existing tools and best practices on using the tools, repo architecture, testing, security and more. Document each topic in the architecture doc, include links to official docs, propose different approach and suggest the best fit.
-for the prompt injection detection, I am thinking to use olama, either as a sidecar or with the js sdk and a local classifier (TBD which one).'
-"
+### Code generation prompt
 
+> "ok cool, actually I forgot to ask you to check node express doc and to follow their documentation, can you add it as a rule in cursor rules, that for any implementation, we want to search official doc, or do research on best practices."
 
-# What I rejected
+What I did: adopted the suggestion, updated rules/docs, and used this as a constraint for subsequent implementation work.
 
-Rejected litellm first implementation, Cursor got confused because litellm doc for js seems to focus on the proxy and not the simple sdk.
+### Security review prompt
 
+> "hey can you check the original-assignment.md to see if we need to classify the prompt injections in a specific way? It wasn't really clear to me"
 
-# Example prompts:
+What I did: used the output to align rule IDs / OWASP mapping and tighten evaluator expectations around the corpus contract.
 
-"ok cool, actually I forgot to ask you to check node express doc and to follow their documentation, can you add it as a rule in cursor rules, that for any implementation, we want to search official doc, or do research on best practices."
+### Debugging prompt
 
-"hey can you check the 
-original-assignment.md
- to see if we need to classify the prompt injections in a specific way? It wasn't really clear to me"
+> "I am still getting {  
+>   "error": "not-implemented",  
+>   "message": "Chat provider integration and security pipeline not implemented yet"  
+> } in swagger, how do I rebuild docker compose, I tried docker compose down but it didn't change"
 
-"yeah write down the options and let's do a deep search and pros and cons later"
+What I did: followed up with Docker rebuild/reset steps and then continued with incremental fixes until the end-to-end route worked.
 
+## 4) What I rejected
 
- # Debug prompt
+I rejected an early LiteLLM integration approach that leaned toward proxy-style setup and did not match the intended JS SDK path for this project. I rewrote that direction and kept the implementation aligned with the simpler in-app SDK flow.
 
- "I am still getting {
-  "error": "not-implemented",
-  "message": "Chat provider integration and security pipeline not implemented yet"
-} in swagger, how do I rebuild docker compose, I tried docker compose down but it didn't change"
+## 5) What I would do with more time
 
-"wait what are you talking about, please find litellm documentation, we just want to use the sdk, not the proxy. pretty sure we don't need a base url pointing at openai, that defeats the purpose of litellm..."
+1. **Improve injection-classification accuracy on hard variants (`INJ-A2`, `INJ-B1`, `INJ-C3`)**  
+   Use AI to generate targeted adversarial variants and evaluate prompt/decision-policy tuning, or test a small classifier/fine-tune approach.
+2. **Add a stronger operational runbook + benchmark pack**  
+   Use AI to draft and iterate a reproducible benchmark suite (latency/FP/FN) and incident/troubleshooting playbooks for detector failures.
 
-"wait we are using litellm for the prompt check, can we still use ollama, I feel it make more sense to use a local llm so I don't get banned from my provider lol"
+## 6) First AI interaction on this challenge (verbatim)
 
-"yeah if owaspCategory is tied to the ruleId anyway let's not ask for it from the llm, I am not sure it has a clue what these are, they don't seem like known universal standard. does the category really add to anything? it might just confuse the model, if it's not required, let's also remove it simpligy the whole service."
+Tool: **Cursor Agent**
 
-"ok it works but the detector picks INJ-A1 most of the times, maybe we should give in the system prompt the example of each rule, like "Fake administrator handoff embedded in user content", not actual prompt injection example of course"
+> "Your role is to format and reword prompts so they are concie and clear. Do not edit any files. I will give you prompts intended as instructions for another cursor agent, check the prompt, give suggestion, organize the prompt so they are more readable. Answer me in the chat only.  
+> Here is the first prompt:  
+> 'In the docs folder you will found the original-assignement.md file. It's a safe to read version of the original assigment.  
+> The first step is going to make a plan, do not write a single line of code before we review the full plan together.  
+> Here is a high level plan:  
+> - first we want to be able to handle prompt injections test and keep cursor safe. let's add a folder for the test prompts that we will: gitignore, cursorignore, claudeignore  
+> - next we want to add some cursor rules for how to operate safely and follow best practices. part of the rule should be that each iteration should be a small step and a suggestion on the next iteration, so I can review bit by bit.  
+> - next we want to write down a technical doc that has a todo list, this will guide the development until completion  
+> - top of the todo list will be to do web research for existing tools and best practices on using the tools, repo architecture, testing, security and more. Document each topic in the architecture doc, include links to official docs, propose different approach and suggest the best fit.  
+> for the prompt injection detection, I am thinking to use olama, either as a sidecar or with the js sdk and a local classifier (TBD which one).'"
 
-"hmmm ok now the prompt injection is too sensitive, we should prompt it to only care about prompt injection, and clarify that pii already inside the input is out of his scope.
+## PDF/untrusted-input handling note
 
-see:
-The input contains a secret exfiltration probe for API keys, env vars, credentials in the phrase 'My contact details are: email: yossi.cohen@example.com mobile: +972-50-555-0142 national ID: 000000018'."
-
-"hey the gh action failed with this: Run gitleaks detect --config .gitleaks.toml --source . --no-git
-/home/runner/work/_temp/4b00f201-f747-475a-b236-1252078518c8.sh: line 1: gitleaks: command not found
-Error: Process completed with exit code 127."
+I worked from a sanitized assignment copy (`docs/original-assignment.md`) where the raw Appendix injection payloads were removed from the shared AI context. I also isolated prompt-corpus files under ignored paths (`test-prompts/`) and treated those datasets as untrusted test inputs.
