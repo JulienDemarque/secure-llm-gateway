@@ -71,7 +71,7 @@ For private repositories, set `CODECOV_TOKEN` in GitHub repository secrets.
 
 **2) Rate limiting.** A Redis sliding-window limiter runs per API key and is isolated from auth/business logic. The default limit is 30 req/min and can be configured per key, with deterministic `429` behavior when the window is exceeded.
 
-**3) Prompt-injection detection (inbound).** Incoming chat messages are classified before provider calls using a structured-output detector contract (rule ID + confidence + rationale). Requests classified as injection are blocked with `400`, and detector failures are surfaced explicitly as gateway errors.
+**3) Prompt-injection detection (inbound).** Incoming chat messages are classified before provider calls using a structured-output detector contract (rule ID + confidence). Requests classified as injection are blocked with `400`, and detector failures are surfaced explicitly as gateway errors.
 
 **4) PII redaction (inbound, reversible).** Before forwarding to the provider, inbound message content is scanned for required categories (email, phone IL+intl, Israeli national ID) and replaced with token placeholders. Original spans are encrypted and persisted so audit retrieval can reconstruct originals for authorized administrators.
 

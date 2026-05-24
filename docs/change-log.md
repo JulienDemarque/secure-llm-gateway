@@ -1078,3 +1078,13 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Marked pre-commit hook activation complete as documented opt-in steps in `README.md`.
 - Added final recommendations summary and LangSmith topic to `docs/research-matrix.md`.
 - Added explicit "Post-assignment follow-ups" section for remaining non-blocking work.
+
+## 2026-05-24 - Iteration 75 (output echo hardening + rationale response cleanup)
+
+- Confirmed output validation already blocks secret-shaped patterns (`sk-*`, JWT, AWS keys) via `src/middleware/validate-outbound-output.ts` and `src/app.output-validation.test.ts`.
+- Strengthened injection-echo detection:
+  - full user-message echo when content looks injection-related,
+  - additional delimiter/smuggling patterns (`<<SYS>>`, `[INST]`, `### system:`),
+  - new stubbed tests for INJ-E2 and INJ-A2 payload echo paths (`AllowPromptInjectionDetector` + `FakeLlmClient`).
+- Removed `rationale` from client-facing `400` prompt-injection responses (still available internally and in `PROMPT_GUARD_DEBUG` logs).
+- Updated detector system prompt to require generic rationale text that never quotes user input.

@@ -10,8 +10,13 @@ const INJECTION_PHRASE_PATTERNS = [
   /(reveal|dump|print)\s+.{0,40}(env|environment|api key|credentials?)/i,
   /(you are now|act as)\s+.{0,40}(dan|administrator|developer mode)/i,
   /begin\s+system\s+prompt/i,
-  /<!--[\s\S]*?-->/i
+  /<!--[\s\S]*?-->/i,
+  /<<\s*SYS\s*>>/i,
+  /\[INST\]/i,
+  /###\s*system\s*:/i
 ];
+
+const MIN_ECHO_SUBSTRING_LENGTH = 24;
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const IL_PHONE_PATTERN = /\b(?:\+972|0)(?:[-\s]?\d){8,9}\b/g;
@@ -106,7 +111,66 @@ function responseContainsSecretPattern(response: unknown): OutputValidationResul
   return null;
 }
 
+function normalizedEchoText(text: string): string {
+  return text.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function extractUserMessageContents(messages: unknown): string[] {
+  if (!Array.isArray(messages)) {
+    return [];
+  }
+
+  return messages.flatMap((message) => {
+    if (
+      message &&
+      typeof message === "object" &&
+      "role" in message &&
+      message.role === "user" &&
+      "content" in message &&
+      typeof message.content === "string"
+    ) {
+      return [message.content];
+    }
+    return [];
+  });
+}
+
+function userMessageLooksInjectionRelated(content: string): boolean {
+  return INJECTION_PHRASE_PATTERNS.some((pattern) => pattern.test(content));
+}
+
+function outputEchoesUserInjectionPayload(messages: unknown, response: unknown): boolean {
+  const userContents = extractUserMessageContents(messages);
+  if (userContents.length === 0) {
+    return false;
+  }
+
+  const responseValues: string[] = [];
+  collectStringValues(response, responseValues);
+  const responseBlob = normalizedEchoText(responseValues.join("\n"));
+  if (responseBlob.length === 0) {
+    return false;
+  }
+
+  return userContents.some((userContent) => {
+    if (!userMessageLooksInjectionRelated(userContent)) {
+      return false;
+    }
+
+    const normalizedUser = normalizedEchoText(userContent);
+    if (normalizedUser.length < MIN_ECHO_SUBSTRING_LENGTH) {
+      return false;
+    }
+
+    return responseBlob.includes(normalizedUser);
+  });
+}
+
 function outputEchoesInjection(messages: unknown, response: unknown): boolean {
+  if (outputEchoesUserInjectionPayload(messages, response)) {
+    return true;
+  }
+
   const messageText =
     Array.isArray(messages) && messages.length > 0
       ? messages

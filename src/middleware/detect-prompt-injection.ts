@@ -44,8 +44,7 @@ export function detectPromptInjection(detector: PromptInjectionDetector) {
           error: "prompt-injection-detected",
           ruleId: result.ruleId,
           owaspCategory: result.owaspCategory,
-          confidence: result.confidence,
-          rationale: result.rationale
+          confidence: result.confidence
         });
       }
 
