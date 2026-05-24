@@ -85,7 +85,7 @@
 - Use HTTPS in deployment; API keys only in headers, not URLs.
 - `timingSafeEqual` is necessary but not sufficient by itself; surrounding flow must also avoid timing leaks.
 
-### Response behavior (placeholder target)
+### Response behavior (implemented)
 
 - `401 Unauthorized`: missing/invalid/revoked key.
 - `403 Forbidden`: valid key without required role.
@@ -236,15 +236,21 @@ Environment key material:
 - Adversarial tests from prompt corpus and variations.
 - Regression tests for known bypasses.
 
-## 11) Prioritized architecture TODOs
+## 11) Prioritized architecture follow-ups
 
-1. Research and decide detection integration mode.
-2. Decide provider abstraction layer (direct SDK vs LiteLLM vs LangChain wrapper) for multi-provider consistency.
-3. Evaluate tracing/observability integration path (native logs/metrics vs optional LangSmith).
-4. Freeze module interfaces and shared security context.
-5. Define audit schema and retention/PII policy.
-6. Define test fixture format for corpus-driven testing.
-7. Define rollout safeguards (feature flags, shadow mode where needed).
+Completed during assignment baseline:
+
+1. ~~Research and decide detection integration mode.~~ → Ollama JS SDK in-process detector with structured JSON output.
+2. ~~Decide provider abstraction layer.~~ → LiteLLM JS SDK in-app mode (no proxy runtime).
+3. ~~Define audit schema and retention/PII policy.~~ → Mongo `audit_logs` + encrypted `redaction_tokens` with admin-only reversal.
+4. ~~Define test fixture format for corpus-driven testing.~~ → `docs/test-prompts-guidelines.md` + adversarial eval suite.
+
+Remaining post-assignment follow-ups:
+
+1. Evaluate tracing/observability integration path (native logs/metrics vs optional LangSmith).
+2. Freeze module interfaces and shared security context as explicit TypeScript contracts.
+3. Define detector timeout/fallback policy and benchmark plan (latency, false positives, false negatives).
+4. Define rollout safeguards (feature flags, shadow mode where needed).
 
 ## 12) External references used
 

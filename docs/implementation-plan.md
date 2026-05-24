@@ -2,8 +2,8 @@
 
 ## Scope
 
-- [ ] Build a secure gateway with layered controls while treating prompt corpora as untrusted test assets.
-- [ ] For every iteration, re-check `docs/original-assignment.md` and update this implementation checklist.
+- [x] Build a secure gateway with layered controls while treating prompt corpora as untrusted test assets.
+- [x] For every iteration, re-check `docs/original-assignment.md` and update this implementation checklist.
 
 ## Phased checklist
 
@@ -33,13 +33,13 @@
 - [x] Record initial shortlist of prompt-injection and PII/security model options for later deep comparison.
 - [x] Complete first-pass deep comparison criteria and pros/cons across shortlisted prompt-injection and PII options.
 - [x] Decide next-step PII implementation approach (Node deterministic baseline now, Presidio sidecar as later enhancement).
-- [ ] Research tools and best practices (official docs, alternatives, recommendation).
+- [x] Research tools and best practices (official docs, alternatives, recommendation) — `docs/research-matrix.md`.
 - [x] Evaluate provider-agnostic abstraction options (LiteLLM vs LangChain) for gateway call path.
-- [ ] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up.
-- [ ] Research repo architecture options (official docs, alternatives, recommendation).
-- [ ] Research testing strategy options (official docs, alternatives, recommendation).
-- [ ] Research security controls and standards (official docs, alternatives, recommendation).
-- [ ] Record final recommendations with rationale.
+- [x] Evaluate LangSmith fit for observability/tracing and decide if it is in-scope or production follow-up — **out of scope**; native `pino` + audit logs (`docs/research-matrix.md` § LangSmith).
+- [x] Research repo architecture options (official docs, alternatives, recommendation) — layered middleware (`docs/research-matrix.md` § repo architecture).
+- [x] Research testing strategy options (official docs, alternatives, recommendation) — unit + integration + adversarial corpus (`docs/research-matrix.md` § testing).
+- [x] Research security controls and standards (official docs, alternatives, recommendation) — OWASP + gitleaks (`docs/research-matrix.md` § security).
+- [x] Record final recommendations with rationale — summary table in `docs/research-matrix.md`.
 
 ### Phase 3: architecture baseline
 
@@ -55,9 +55,9 @@
 - [x] Improve Swagger default `/v1/chat` payload example for realistic manual testing.
 - [x] Extend `/healthz` dependency reporting with Ollama detector readiness.
 - [x] Add prompt-guard debug logging path for detector decision troubleshooting.
-- [ ] Define request pipeline contract for `/v1/chat`.
-- [ ] Freeze middleware boundaries and shared audit context contract.
-- [ ] Define test strategy per control module and acceptance criteria.
+- [x] Define request pipeline contract for `/v1/chat` — auth → rate limit → injection guard → PII redaction → provider → output validation → audit (`docs/technical-architecture-outline.md` §3; `src/app.ts`).
+- [x] Freeze middleware boundaries and shared audit context contract — `src/types/express.d.ts`, isolated `src/middleware/*`, domain types in `src/domain/*`.
+- [x] Define test strategy per control module and acceptance criteria — `src/app.*.test.ts` per control, Redis integration suite, adversarial eval (`docs/test-prompts-guidelines.md`).
 
 ### Phase 4: detection implementation strategy
 
@@ -70,8 +70,8 @@
 - [x] Improve detector prompt with per-rule descriptors + disambiguation guidance to reduce overuse of `INJ-A1`.
 - [x] Narrow detector scope prompt to injection behavior only (exclude standalone user-provided PII from blocking).
 - [x] Link audit and PII token records via shared per-request `correlationId`.
-- [ ] Define detector timeout/fallback policy and audit semantics.
-- [ ] Define benchmark plan (latency, false positives, false negatives).
+- [x] Define detector timeout/fallback policy and audit semantics — documented in `docs/detection-approach-comparison.md`; implemented fail-closed on detector errors (`502`) and fail-safe schema coercion; configurable hard timeout deferred (`docs/productionalization-notes.md`).
+- [x] Define benchmark plan (latency, false positives, false negatives) — adversarial corpus eval with case/assertion scoring (`src/app.adversarial.integration.test.ts`, `README.md` § Adversarial corpus eval test).
 
 ### Phase 5: full control implementation
 
@@ -95,7 +95,14 @@
 - [x] Add secret scanning configuration and CI check.
 - [x] Add TypeScript typecheck to pre-commit hook checks.
 - [x] Add structured JSON logging with per-request correlation ID.
-- [ ] Activate pre-commit hook in local git environment.
+- [x] Activate pre-commit hook in local git environment — documented activation in `README.md` (opt-in per developer via `git config core.hooksPath .githooks`).
 - [x] Add adversarial test variations and regression suite.
-- [ ] Document known limitations and operational runbook.
-- [ ] Final end-to-end validation against assignment acceptance criteria.
+- [x] Document known limitations and operational runbook (`README.md` limitations section + `docs/productionalization-notes.md`).
+- [x] Final end-to-end validation against assignment acceptance criteria (Docker stack, unit/integration/eval suites, requirements traceability).
+
+## Post-assignment follow-ups (not blocking submission)
+
+- [ ] Implement configurable detector hard timeout (env-driven abort) and explicit fallback audit reason codes.
+- [ ] Add load-test harness for p50/p95/p99 latency and timeout-rate SLO tracking.
+- [ ] Evaluate LangSmith or OpenTelemetry integration for richer LLM span tracing.
+- [ ] Optional Presidio sidecar for expanded PII entity coverage beyond assignment categories.

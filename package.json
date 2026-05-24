@@ -1,7 +1,7 @@
 {
   "name": "secure-llm-gateway",
   "version": "1.0.0",
-  "description": "SecureLLM Gateway placeholder API",
+  "description": "SecureLLM Gateway — security layer for LLM API traffic",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

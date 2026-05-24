@@ -164,3 +164,28 @@ Research is the top implementation priority. For each topic, this document track
   - External managed control plane
 - Best-fit recommendation
   - Defense-in-depth in gateway code now, plus documented residual risks and known limitations.
+
+## Topic: observability and tracing (LangSmith)
+
+- Official sources
+  - LangSmith docs: <https://docs.smith.langchain.com/>
+  - Pino structured logging: <https://getpino.io/>
+- Alternatives
+  - Native structured logs + correlation IDs only (current baseline)
+  - LangSmith tracing for LLM call spans and eval datasets
+  - OpenTelemetry + external APM
+- Best-fit recommendation
+  - **Out of scope for assignment baseline.** Use `pino` with per-request `correlationId` and Mongo audit logs for traceability.
+  - Revisit LangSmith post-assignment if multi-step agent workflows or hosted eval dashboards become a requirement (`docs/productionalization-notes.md`).
+
+## Final recommendations summary
+
+| Area | Decision | Rationale doc |
+|------|----------|---------------|
+| Prompt injection | Ollama JS SDK in-process + structured JSON | `docs/detection-approach-comparison.md` |
+| PII | Node deterministic baseline + reversible tokens | This doc, § PII/security |
+| Provider | LiteLLM JS SDK in-app | `docs/technical-architecture-outline.md` |
+| Architecture | Layered Express middleware | This doc, § repo architecture |
+| Testing | Unit + integration + adversarial corpus eval | This doc, § testing; `docs/test-prompts-guidelines.md` |
+| Security baseline | Defense-in-depth + gitleaks CI | `docs/security-ci-baseline.md` |
+| Observability | Pino + correlationId + audit logs | This doc, § LangSmith |

@@ -2,7 +2,7 @@
 
 [![codecov](https://codecov.io/gh/JulienDemarque/secure-llm-gateway/graph/badge.svg?token=iowv5ewp8g)](https://codecov.io/gh/JulienDemarque/secure-llm-gateway)
 
-Minimal Node.js/TypeScript placeholder API scaffold for the SecureLLM challenge.
+Production-oriented security gateway for LLM APIs — auth, rate limiting, prompt-injection detection, PII redaction, output validation, and audit logging.
 
 ## Quick start
 
@@ -44,13 +44,13 @@ GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pul
 
 For private repositories, set `CODECOV_TOKEN` in GitHub repository secrets.
 
-## Placeholder endpoints
+## API endpoints
 
-- `GET /healthz`
-- `POST /v1/chat`
-- `GET /v1/audit`
-- `GET /openapi.json`
-- `GET /docs` (Swagger UI)
+- `GET /healthz` — liveness and dependency readiness (Mongo, Redis, Ollama, provider)
+- `POST /v1/chat` — chat proxy through the full security pipeline (`x-api-key` required)
+- `GET /v1/audit` — paginated audit log retrieval (`admin` role required)
+- `GET /openapi.json` — OpenAPI spec
+- `GET /docs` — Swagger UI for manual testing
 
 ## Current implemented controls
 

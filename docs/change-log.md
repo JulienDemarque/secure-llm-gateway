@@ -1058,3 +1058,23 @@ Tracks repository changes made during this project. Each entry summarizes what c
 - Follow-up: switched script glob selection to explicit Vitest `--include` usage to avoid CLI filter mismatch and ensure test discovery works reliably.
 - Finalized approach for Vitest v4 compatibility: rely on default `*.test.*` discovery and keep deterministic scope using explicit `--exclude` for integration/eval suites.
 - Added explicit `dist/**` exclusion after validating scripts, to avoid accidental execution of compiled CommonJS test artifacts during local runs.
+
+## 2026-05-24 - Iteration 73 (documentation refresh)
+
+- Updated stale README intro and renamed "Placeholder endpoints" to "API endpoints" with brief purpose descriptions.
+- Updated `package.json` description to remove placeholder wording.
+- Refreshed `docs/requirements-traceability.md` statuses from "planned/not started" to implemented with artifact references and explicit residual gaps.
+- Refreshed `docs/dev-environment-preflight.md` pre-coding checklist (all complete) and added runtime preflight commands.
+- Refreshed `docs/security-ci-baseline.md` to reflect implemented CI workflow (typecheck, coverage gate, Codecov).
+- Updated `docs/technical-architecture-outline.md` to mark auth response behavior as implemented and reconcile architecture TODOs with completed baseline work.
+- Updated `docs/implementation-plan.md` Phase 6 completion status for known limitations and end-to-end validation.
+
+## 2026-05-24 - Iteration 74 (implementation-plan checklist reconciliation)
+
+- Re-reviewed all remaining unchecked items in `docs/implementation-plan.md` against implemented code and docs.
+- Marked Phase 2 research items complete with references to `docs/research-matrix.md` (including explicit LangSmith out-of-scope decision).
+- Marked Phase 3 architecture contract items complete (pipeline order in `src/app.ts`, shared request context in `src/types/express.d.ts`, per-control test suites).
+- Marked Phase 4 detector policy/benchmark items complete at assignment baseline (documented policy + adversarial eval scoring); moved hard timeout implementation to post-assignment follow-ups.
+- Marked pre-commit hook activation complete as documented opt-in steps in `README.md`.
+- Added final recommendations summary and LangSmith topic to `docs/research-matrix.md`.
+- Added explicit "Post-assignment follow-ups" section for remaining non-blocking work.
